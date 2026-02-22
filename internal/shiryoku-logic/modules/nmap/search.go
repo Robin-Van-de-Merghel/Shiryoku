@@ -2,10 +2,8 @@ package nmap
 
 import "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
 
-const LAST_SCAN_NUMBER = 10
-
 // List last scans
-func GetLastNmapScans() ([]models.NmapData, error) {
+func GetLastNmapScans(searchParamas models.SearchParams) ([]models.NmapData, error) {
 	// TODO: Add db layer to store it
 	nmapResult := []models.NmapData{
 		{

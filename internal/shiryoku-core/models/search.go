@@ -5,6 +5,10 @@ import (
 	"fmt"
 )
 
+// Consts
+const MAX_RESULTS_PER_PAGE = 1000
+const DEFAULT_RESULTS_PER_PAGE = 100
+
 // ScalarOperator enum
 type ScalarOperator string
 
@@ -44,9 +48,26 @@ func (v VectorOperator) IsValid() bool {
 	}
 }
 
+// SortDirection enum
+type SortDirection string
+
+const (
+	DirASC  SortDirection = "asc"
+	DirDESC SortDirection = "desc"
+)
+
+func (sd SortDirection) IsValid() bool {
+	switch sd {
+	case DirASC, DirDESC:
+		return true
+	default:
+		return false
+	}
+}
+
 type SortSpec struct {
-	Parameter string `json:"parameter"`
-	Direction string `json:"direction"`
+	Parameter string        `json:"parameter"`
+	Direction SortDirection `json:"direction"`
 }
 
 // To fetch couple elements based on their values
@@ -74,6 +95,18 @@ type SearchParams struct {
 	Search     []SearchSpec `json:"search" validate:"dive,required"`
 	Sort       []SortSpec   `json:"sort"`
 	Distinct   bool         `json:"distinct"`
+	Page       uint64       `json:"page"`
+	PerPage    uint8        `json:"per_page"`
+}
+
+func (s *SearchParams) SetDefaults() {
+	if s.PerPage == 0 {
+		s.PerPage = DEFAULT_RESULTS_PER_PAGE
+	}
+
+	if s.Sort == nil {
+		s.Sort = []SortSpec{}
+	}
 }
 
 // Custom unmarshaler for SearchSpec

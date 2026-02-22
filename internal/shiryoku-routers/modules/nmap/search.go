@@ -18,15 +18,15 @@ func SearchNmapScans(c *gin.Context) {
 		return
 	}
 
-	// Generate schema automatically from struct
-	schema := utils.GenerateSchema(params)
-
-	if !utils.ValidateAndRespond(c, params, schema) {
+	if !utils.ValidateAndRespond(c, params, utils.SearchSchema) {
 		return
 	}
 
+	// To prevent having "per_page=0"
+	params.SetDefaults()
+
 	// Get data from the database
-	nmapResult, err := nmap.GetLastNmapScans()
+	nmapResult, err := nmap.GetLastNmapScans(params)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
