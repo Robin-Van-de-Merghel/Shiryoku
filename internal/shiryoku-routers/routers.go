@@ -27,13 +27,11 @@ func GetFilledRouter() *gin.Engine {
 		{
 			// Nmap group
 			nmap_group := modules_group.Group("/nmap")
-			
+
 			// Routes
-			nmap_group.GET("/", nmap.GetNmapScans)
+			nmap_group.POST("/search", nmap.SearchNmapScans)
 		}
 	}
 
 	return router
 }
-
-

@@ -6,7 +6,7 @@ const LAST_SCAN_NUMBER = 10
 
 // List last scans
 func GetLastNmapScans() ([]models.NmapData, error) {
-	// TODO: Add db layer to store it 
+	// TODO: Add db layer to store it
 	nmapResult := []models.NmapData{
 		{
 			Host: "1.1.1.1",
@@ -14,9 +14,9 @@ func GetLastNmapScans() ([]models.NmapData, error) {
 				{
 					Port: 443,
 					MetaData: models.NmapService{
-						ServiceName: "HTTPS",
+						ServiceName:    "HTTPS",
 						ServiceVersion: "XX",
-					},	
+					},
 				},
 			},
 		},

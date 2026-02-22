@@ -1,11 +1,11 @@
 package models
 
 // Port status from nmap scans
-type PortStatus uint8 
+type PortStatus uint8
 
 const (
-	NMAP_PORT_OPEN = iota + 1 
-	NMAP_PORT_CLOSED 
+	NMAP_PORT_OPEN = iota + 1
+	NMAP_PORT_CLOSED
 	NMAP_PORT_FILTERED
 )
 
@@ -15,7 +15,7 @@ func (ps PortStatus) String() string {
 
 // Validate PortStatus
 func (ps PortStatus) IsValid() bool {
-	return ps >= NMAP_PORT_OPEN && ps <= NMAP_PORT_FILTERED	
+	return ps >= NMAP_PORT_OPEN && ps <= NMAP_PORT_FILTERED
 }
 
 // Services
@@ -42,7 +42,7 @@ type NmapPort struct {
 type NmapData struct {
 	// IP or domain name
 	Host string
-	
+
 	// Ports with their metadata
 	Ports []NmapPort
 

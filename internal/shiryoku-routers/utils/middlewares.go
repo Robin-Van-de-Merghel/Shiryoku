@@ -14,13 +14,13 @@ func ErrorRecoveryMiddleware() gin.HandlerFunc {
 
 		// Get timestamp to help debugging
 		timestamp := time.Now().UTC()
-		
+
 		// Return custom 500 response
 		c.JSON(500, gin.H{
-			"code":    500,
-			"timestamp": timestamp, 
-			"message": "Internal Server Error. Please contact an administrator",
-			"detail":   fmt.Sprintf("%v", err),
+			"code":      500,
+			"timestamp": timestamp,
+			"message":   "Internal Server Error. Please contact an administrator",
+			"detail":    fmt.Sprintf("%v", err),
 		})
 		c.Abort()
 	})
