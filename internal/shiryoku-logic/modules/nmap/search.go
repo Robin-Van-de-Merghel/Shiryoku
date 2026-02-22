@@ -1,24 +1,13 @@
 package nmap
 
-import "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
+import (
+	"context"
 
-// List last scans
-func GetLastNmapScans(searchParamas models.SearchParams) ([]models.NmapData, error) {
-	// TODO: Add db layer to store it
-	nmapResult := []models.NmapData{
-		{
-			Host: "1.1.1.1",
-			Ports: []models.NmapPort{
-				{
-					Port: 443,
-					MetaData: models.NmapService{
-						ServiceName:    "HTTPS",
-						ServiceVersion: "XX",
-					},
-				},
-			},
-		},
-	}
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
+	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+)
 
-	return nmapResult, nil
+// SearchNmapScans returns nmap scan results matching the given params
+func SearchNmapScans(ctx context.Context, searchParams *models.SearchParams, nmapDB osdb.NmapDBIface) (*osdb.NmapSearchResult, error) {
+	return nmapDB.Search(ctx, searchParams)
 }

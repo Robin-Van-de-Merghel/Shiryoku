@@ -2,35 +2,35 @@ package nmap
 
 import (
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
-	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/modules/nmap"
+	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+	logicnmap "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/modules/nmap"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
 	"github.com/gin-gonic/gin"
 )
 
-// TODO: Later, use search engine interface
+// SearchNmapScans returns a gin handler injected with the given NmapDBIface.
+// Call with no argument in tests to use the DummyNmapDB automatically.
+func SearchNmapScans(nmapDB osdb.NmapDBIface) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		var params models.SearchParams
 
-// Gets the last scans
-func SearchNmapScans(c *gin.Context) {
-	var params models.SearchParams
+		if err := c.ShouldBindJSON(&params); err != nil {
+			utils.ParseJSONError(c, err)
+			return
+		}
 
-	if err := c.ShouldBindJSON(&params); err != nil {
-		utils.ParseJSONError(c, err)
-		return
+		if !utils.ValidateAndRespond(c, params, utils.SearchSchema) {
+			return
+		}
+
+		params.SetDefaults()
+
+		nmapResult, err := logicnmap.SearchNmapScans(c.Request.Context(), &params, nmapDB)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(200, nmapResult)
 	}
-
-	if !utils.ValidateAndRespond(c, params, utils.SearchSchema) {
-		return
-	}
-
-	// To prevent having "per_page=0"
-	params.SetDefaults()
-
-	// Get data from the database
-	nmapResult, err := nmap.GetLastNmapScans(params)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(200, nmapResult)
 }

@@ -45,3 +45,33 @@ This sub-section of the API is dedicated to dashboard to fetch data about specif
 
 > [!NOTE]
 > See if we might keep only one generic endpoint, or multiple categorized by module.
+
+# Dependency injection
+
+To inject data, I used [Alex Edwards](https://www.alexedwards.net/blog/organising-database-access)'s guidelines, as such:
+
+```go
+// Handler takes the injected values as parameters
+// Return what a gin.Handler function requires: a function taking a context as an input
+func YourHandler(ASqlDB *sql.DB) func(c *gin.Context) {
+	// Wraps to inject dependency (ASqlDB)
+    return func(c *gin.Context) {
+        // Your classical handler
+        ...
+    }
+}
+```
+
+> [!NOTE]
+> `HandlerFunc` is just a redefinition of `func(*gin.Context)` (see [here](https://pkg.go.dev/github.com/gin-gonic/gin#HandlerFunc))
+
+Then, you can call it in [`routers.go`](./routers.go) via:
+
+```go
+router.GET(
+    "/test", 
+    // Call the handler to inject a value
+    // (normally, you would just give a reference to the handler)
+    YourHandler(ASqlDB),
+)
+```

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -17,12 +18,14 @@ func setupRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(utils.ErrorRecoveryMiddleware())
 
+	dummyDB := osdb.NewDummyNmapDB()
+
 	api_group := r.Group("/api")
 	{
 		modules_group := api_group.Group("/modules")
 		{
 			nmap_group := modules_group.Group("/nmap")
-			nmap_group.POST("/search", SearchNmapScans)
+			nmap_group.POST("/search", SearchNmapScans(dummyDB))
 		}
 	}
 	return r

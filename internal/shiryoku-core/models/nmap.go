@@ -18,33 +18,52 @@ func (ps PortStatus) IsValid() bool {
 	return ps >= NMAP_PORT_OPEN && ps <= NMAP_PORT_FILTERED
 }
 
-// Services
-type NmapService struct {
-	// Service name (e.g. HTTP)
-	ServiceName string
-
-	// Service Version
-	ServiceVersion string
+// NmapDocument is the flat document stored in OpenSearch (one per port)
+type NmapDocument struct {
+	// Host (IP or domain)
+	Host string `json:"host"`
+	// Port number
+	Port uint16 `json:"port"`
+	// Port status (open, close, filtered)
+	Status string `json:"status,omitempty"`
+	// Service name (http, ssh, etc.)
+	ServiceName string `json:"service_name,omitempty"`
+	// Service version
+	ServiceVersion string `json:"service_version,omitempty"`
 }
 
-// Port with its MetaData
-type NmapPort struct {
-	// Max port: 65,535
-	Port uint16
-
-	// Status
-
-	// More info about this port
-	MetaData NmapService
-}
-
-// (not-)All information obtained from an Nmap scan
+// NmapData is the input format (host + multiple ports) used in the API
 type NmapData struct {
 	// IP or domain name
-	Host string
-
+	Host string `json:"host"`
 	// Ports with their metadata
-	Ports []NmapPort
+	Ports []NmapPort `json:"ports"`
+}
 
-	// TODO: More info (OS, traceroute, modules, etc.)
+// NmapService holds service metadata
+type NmapService struct {
+	ServiceName    string `json:"service_name"`
+	ServiceVersion string `json:"service_version"`
+}
+
+// NmapPort is a port with its metadata (used in insert input)
+type NmapPort struct {
+	Port     uint16      `json:"port"`
+	Status   PortStatus  `json:"status,omitempty"`
+	MetaData NmapService `json:"metadata"`
+}
+
+// ToDocuments converts NmapData into a flat list of NmapDocument (one per port)
+func (n *NmapData) ToDocuments() []NmapDocument {
+	docs := make([]NmapDocument, 0, len(n.Ports))
+	for _, p := range n.Ports {
+		docs = append(docs, NmapDocument{
+			Host:           n.Host,
+			Port:           p.Port,
+			Status:         p.Status.String(),
+			ServiceName:    p.MetaData.ServiceName,
+			ServiceVersion: p.MetaData.ServiceVersion,
+		})
+	}
+	return docs
 }
