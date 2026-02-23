@@ -6,18 +6,20 @@ import (
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
 )
 
-// WidgetNmapHost is being used in the dashboard to display "last hosts scanned"
-type WidgetDashboardOutput struct {
-	Host      string       `json:"host,omitempty"`
-	HostNames []string     `json:"hostnames,omitempty"`
-	Scans     []WidgetDashboardHostScan   `json:"scans,omitempty"`
+// WidgetDashboardScan represents a single scan with host and port info
+type WidgetDashboardScan struct {
+	ScanID    string    `json:"scan_id"`
+	ScanStart time.Time `json:"scan_start"`
+	Host      string    `json:"host"`
+	HostID    string    `json:"host_id"`
+	HostNames []string  `json:"hostnames,omitempty"`
+	Ports     []uint16  `json:"ports,omitempty"`
 }
 
-// HostScan represents a single scan for a host, including ports
-type WidgetDashboardHostScan struct {
-	ScanID    string   `json:"scan_id"`
-	ScanStart time.Time `json:"scan_start"`
-	Ports     []uint16 `json:"ports,omitempty"`
+// WidgetHostInfo is internal helper for host data
+type WidgetHostInfo struct {
+	Host      string
+	HostNames []string
 }
 
 // WigetDashboardInput is being sent by the front
