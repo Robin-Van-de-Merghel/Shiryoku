@@ -18,34 +18,30 @@ type FullScanResults struct {
 
 // Converts a full nmap scan into an opensearch-usable struct
 func ConvertFullScanIntoDocuments(results *nmap.Run) *FullScanResults {
-
 	fullScanResults := &FullScanResults{
-		Hosts: []osdb.BulkItem[models.NmapHostDocument]{}, // Initialize empty Hosts slice
-		Ports: []osdb.BulkItem[models.NmapPortDocument]{}, // Initialize empty Ports slice
+		Hosts: []osdb.BulkItem[models.NmapHostDocument]{},
+		Ports: []osdb.BulkItem[models.NmapPortDocument]{},
 	}
 
-	// First, convert the scan info (scan metadata) into a document
 	scanInfo := convertScanInfoToDocuments(results)
 
-	// For each host in the scan, generate documents for both hosts and ports
 	for _, host := range results.Hosts {
-		// Convert host to a document
 		hostItem := convertHostToDocument(&host, scanInfo.ID)
-		// Add the host document to the bulk items (append as BulkItem[any])
 		fullScanResults.Hosts = append(fullScanResults.Hosts, osdb.BulkItem[models.NmapHostDocument]{
 			Index: NMAP_HOSTS_INDEX,
-			ID:    hostItem.ID,  // Extract ID from hostItem
-			Doc:   hostItem.Doc, // Extract Doc from hostItem
+			ID:    hostItem.ID,
+			Doc:   hostItem.Doc,
 		})
 
-		// Add the host ID to the scan document (will be inserted separately)
 		scanInfo.Doc.HostIDs = append(scanInfo.Doc.HostIDs, hostItem.ID)
 
-		// Convert ports to documents for the current host
 		portItems := convertHostPortsToDocuments(&host, scanInfo.ID, hostItem.ID)
-
-		fullScanResults.Ports = append(fullScanResults.Ports, portItems...) // Add all port documents to the bulk items
+		fmt.Printf("DEBUG: Host %s has %d ports\n", hostItem.ID, len(portItems))
+		
+		fullScanResults.Ports = append(fullScanResults.Ports, portItems...)
 	}
+
+	fmt.Printf("DEBUG: Total ports created: %d\n", len(fullScanResults.Ports))
 
 	fullScanResults.Scan = osdb.BulkItem[models.NmapScanDocument]{
 		Index: NMAP_SCANS_INDEX,

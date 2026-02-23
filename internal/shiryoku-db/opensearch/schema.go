@@ -280,6 +280,7 @@ func InsertBulk[T any](ctx context.Context, client *OpenSearchClient, documents 
 				ID      string `json:"_id"`
 				Index   string `json:"_index"`
 				Version uint64 `json:"_version"`
+				Error   map[string]any `json:"error,omitempty"`  // ADD THIS
 			} `json:"index"`
 		} `json:"items"`
 	}
@@ -290,7 +291,11 @@ func InsertBulk[T any](ctx context.Context, client *OpenSearchClient, documents 
 
 	// Collect the results (IDs, versions, etc.)
 	var results []*InsertResult
-	for _, item := range indexResponse.Items {
+	for i, item := range indexResponse.Items {
+		// CHECK FOR ERRORS HERE
+		if item.Index.Error != nil {
+			fmt.Printf("DEBUG bulk error[%d]: %+v\n", i, item.Index.Error)
+		}
 		results = append(results, &InsertResult{
 			ID:      item.Index.ID,
 			Index:   item.Index.Index,
