@@ -33,7 +33,7 @@ func ConvertFullScanIntoDocuments(results *nmap.Run) *FullScanResults {
 		hostItem := convertHostToDocument(&host, scanInfo.ID)
 		// Add the host document to the bulk items (append as BulkItem[any])
 		fullScanResults.Hosts = append(fullScanResults.Hosts, osdb.BulkItem[models.NmapHostDocument]{
-			Index: "nmap-hosts",
+			Index: NMAP_HOSTS_INDEX,
 			ID:    hostItem.ID,  // Extract ID from hostItem
 			Doc:   hostItem.Doc, // Extract Doc from hostItem
 		})
@@ -48,7 +48,7 @@ func ConvertFullScanIntoDocuments(results *nmap.Run) *FullScanResults {
 	}
 
 	fullScanResults.Scan = osdb.BulkItem[models.NmapScanDocument]{
-		Index: "nmap-scans",
+		Index: NMAP_SCANS_INDEX,
 		ID:    scanInfo.ID,
 		Doc:   scanInfo.Doc,
 	}
@@ -77,10 +77,9 @@ func convertHostPortsToDocuments(h *nmap.Host, scanID string, hostID string) []o
 		doc.ServiceProduct = port.Service.Product
 		doc.ServiceTunnel = port.Service.Tunnel
 
-		// FIXME: constants for index
 		bulkItems = append(bulkItems, osdb.BulkItem[models.NmapPortDocument]{
 			ID:    fmt.Sprintf("%s:%s:%d", scanID, hostID, doc.Port),
-			Index: "nmap-ports",
+			Index: NMAP_PORTS_INDEX,
 			Doc:   doc,
 		})
 	}
@@ -100,10 +99,10 @@ func convertScanInfoToDocuments(si *nmap.Run) osdb.BulkItem[models.NmapScanDocum
 	doc.NmapVersion = si.Version
 	doc.ScanStart = time.Time(si.Start)
 
-	// Fixme: constant for index
 	return osdb.BulkItem[models.NmapScanDocument]{
 		ID:    doc.ScanID,
-		Index: "nmap-scans",
+		Index: NMAP_SCANS_INDEX,
+		Doc: doc,
 	}
 }
 
@@ -125,9 +124,8 @@ func convertHostToDocument(h *nmap.Host, scanID string) osdb.BulkItem[models.Nma
 	doc.OSName = osName
 	doc.OSAccuracy = accuracy
 
-	// FIXME: Constants for nmap-host
 	return osdb.BulkItem[models.NmapHostDocument]{
-		Index: "nmap-hosts",
+		Index: NMAP_HOSTS_INDEX,
 		ID:    fmt.Sprintf("%s:%s", scanID, doc.HostID),
 		Doc:   doc,
 	}
