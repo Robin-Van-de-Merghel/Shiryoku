@@ -1,5 +1,10 @@
 package config
 
+import (
+	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+	"github.com/gin-gonic/gin"
+)
+
 type LogLevelT uint8
 
 const (
@@ -12,6 +17,37 @@ func (ll LogLevelT) IsValid() bool {
 	return ll <= LOG_LEVEL_ERROR
 }
 
+// DB Config for a single DB (SQL, opensearch)
+type DBConfig struct {
+	// IP/domain/port
+	Host string
+	Port uint16
+
+	// Creds
+	Username string
+	Password string
+}
+
+// Modules to add modularity
+type APIModule struct {
+	// Group name
+	Name string
+
+	// Description (if needed)
+	Description string
+
+	// URL path, e.g. /nmap
+	Path string
+
+	// DB instance
+	// FIXME: Use generic?
+	NMapDB osdb.NmapDBIface
+
+	// Callback to setup the API routes
+	// It needs a subgroup. This subgroup separates the endpoints for each module.
+	SetupModuleRoutes func(*gin.RouterGroup, APIModule)
+}
+
 // Server config, contains everything that can be modified
 type ServerConfig struct {
 	// Server port
@@ -19,4 +55,8 @@ type ServerConfig struct {
 
 	// Logs
 	LogLevel LogLevelT
+
+	// Databases
+	// [DBName] -> [Config]
+	DBConfigs map[string]DBConfig
 }

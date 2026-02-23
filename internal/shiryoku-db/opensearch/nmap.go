@@ -47,15 +47,17 @@ func (db *NmapDB) Search(ctx context.Context, params *models.SearchParams) (*Nma
 }
 
 // Insert explodes NmapData into one document per port and bulk-inserts them
-func (db *NmapDB) Insert(ctx context.Context, nmapData *models.NmapData) ([]string, error) {
-	if nmapData.Host == "" {
-		return nil, fmt.Errorf("nmap data must have a host")
-	}
-
-	docs := nmapData.ToDocuments()
+func (db *NmapDB) Insert(ctx context.Context, docs []models.NmapDocument) ([]string, error) {
 	ids := make([]string, 0, len(docs))
 
 	for _, doc := range docs {
+
+		// Verify that host is defined
+		if doc.Host == "" {
+			// TODO: Logs
+			continue
+		}
+
 		// ID = host:port to allow upsert
 		id := fmt.Sprintf("%s:%d", doc.Host, doc.Port)
 		result, err := db.osClient.Insert(ctx, nmapIndex, id, doc)
@@ -66,21 +68,6 @@ func (db *NmapDB) Insert(ctx context.Context, nmapData *models.NmapData) ([]stri
 	}
 
 	return ids, nil
-}
-
-// InsertBatch inserts multiple NmapData
-func (db *NmapDB) InsertBatch(ctx context.Context, nmapDataList []models.NmapData) ([]string, error) {
-	allIDs := make([]string, 0)
-
-	for _, nmapData := range nmapDataList {
-		ids, err := db.Insert(ctx, &nmapData)
-		if err != nil {
-			return allIDs, fmt.Errorf("failed to insert batch: %w", err)
-		}
-		allIDs = append(allIDs, ids...)
-	}
-
-	return allIDs, nil
 }
 
 func parseNmapDocument(rawData map[string]any) (models.NmapDocument, error) {

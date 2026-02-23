@@ -7,12 +7,7 @@ import (
 	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
 )
 
-// SaveNmapScan saves a single nmap scan (explodes into one doc per port)
-func SaveNmapScan(ctx context.Context, nmapData *models.NmapData, nmapDB osdb.NmapDBIface) ([]string, error) {
+// SaveNmapScans saves nmap scans (explodes into one doc per port)
+func SaveNmapScans(ctx context.Context, nmapData []models.NmapDocument, nmapDB osdb.NmapDBIface) ([]string, error) {
 	return nmapDB.Insert(ctx, nmapData)
-}
-
-// SaveNmapScans saves multiple nmap scan results
-func SaveNmapScans(ctx context.Context, nmapDataList []models.NmapData, nmapDB osdb.NmapDBIface) ([]string, error) {
-	return nmapDB.InsertBatch(ctx, nmapDataList)
 }

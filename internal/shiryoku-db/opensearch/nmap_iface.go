@@ -10,8 +10,7 @@ import (
 // NmapDBIface is the interface that both NmapDB and DummyNmapDB implement.
 type NmapDBIface interface {
 	Search(ctx context.Context, params *models.SearchParams) (*NmapSearchResult, error)
-	Insert(ctx context.Context, nmapData *models.NmapData) ([]string, error)
-	InsertBatch(ctx context.Context, nmapDataList []models.NmapData) ([]string, error)
+	Insert(ctx context.Context, nmapData []models.NmapDocument) ([]string, error)
 }
 
 // DummyNmapDB is an in-memory implementation of NmapDBIface for unit tests.
@@ -35,8 +34,7 @@ func (d *DummyNmapDB) Search(_ context.Context, params *models.SearchParams) (*N
 	return &NmapSearchResult{Total: uint64(len(results)), Results: results}, nil
 }
 
-func (d *DummyNmapDB) Insert(_ context.Context, nmapData *models.NmapData) ([]string, error) {
-	docs := nmapData.ToDocuments()
+func (d *DummyNmapDB) Insert(_ context.Context, docs []models.NmapDocument) ([]string, error) {
 	ids := make([]string, 0, len(docs))
 	for _, doc := range docs {
 		id := fmt.Sprintf("%s:%d", doc.Host, doc.Port)
@@ -44,18 +42,6 @@ func (d *DummyNmapDB) Insert(_ context.Context, nmapData *models.NmapData) ([]st
 		ids = append(ids, id)
 	}
 	return ids, nil
-}
-
-func (d *DummyNmapDB) InsertBatch(_ context.Context, nmapDataList []models.NmapData) ([]string, error) {
-	allIDs := []string{}
-	for _, nmapData := range nmapDataList {
-		ids, err := d.Insert(context.Background(), &nmapData)
-		if err != nil {
-			return allIDs, err
-		}
-		allIDs = append(allIDs, ids...)
-	}
-	return allIDs, nil
 }
 
 func matchesAll(doc models.NmapDocument, specs []models.SearchSpec) bool {
@@ -86,7 +72,7 @@ func getDocField(doc models.NmapDocument, field string) any {
 	case "port":
 		return doc.Port
 	case "status":
-		return doc.Status
+		return doc.HostStatus
 	case "service_name":
 		return doc.ServiceName
 	case "service_version":

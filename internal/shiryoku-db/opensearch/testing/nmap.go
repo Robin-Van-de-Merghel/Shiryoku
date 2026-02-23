@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
+	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
 )
 
 // DummyNmapDB implements osdb.NmapDBIface using a MemoryDB.
@@ -20,10 +20,8 @@ func NewDummyNmapDB() *DummyNmapDB {
 }
 
 // Insert explodes NmapData into flat NmapDocuments and stores them.
-func (d *DummyNmapDB) Insert(ctx context.Context, nmapData *models.NmapData) ([]string, error) {
-	docs := nmapData.ToDocuments()
+func (d *DummyNmapDB) Insert(ctx context.Context, docs []models.NmapDocument) ([]string, error) {
 	ids := make([]string, 0, len(docs))
-
 	for _, doc := range docs {
 		id := fmt.Sprintf("%s:%d", doc.Host, doc.Port)
 		if err := d.mem.Store(ctx, id, doc); err != nil {
@@ -33,19 +31,6 @@ func (d *DummyNmapDB) Insert(ctx context.Context, nmapData *models.NmapData) ([]
 	}
 
 	return ids, nil
-}
-
-// InsertBatch inserts multiple NmapData entries.
-func (d *DummyNmapDB) InsertBatch(ctx context.Context, nmapDataList []models.NmapData) ([]string, error) {
-	allIDs := make([]string, 0)
-	for _, nmapData := range nmapDataList {
-		ids, err := d.Insert(ctx, &nmapData)
-		if err != nil {
-			return allIDs, err
-		}
-		allIDs = append(allIDs, ids...)
-	}
-	return allIDs, nil
 }
 
 // Search returns all stored documents as NmapDocuments (no filtering — it's a dummy).
