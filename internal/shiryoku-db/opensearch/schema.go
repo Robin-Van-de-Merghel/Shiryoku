@@ -28,7 +28,7 @@ func NewOpenSearchClient(client *opensearch.Client) *OpenSearchClient {
 }
 
 // Search performs a search on a given index
-func (os *OpenSearchClient) Search(ctx context.Context, index string, params *models.SearchParams) (*SearchResult, error) {
+func (os OpenSearchClient) Search(ctx context.Context, index string, params *models.SearchParams) (*SearchResult, error) {
 	query := buildOpenSearchQuery(params)
 
 	body := map[string]any{

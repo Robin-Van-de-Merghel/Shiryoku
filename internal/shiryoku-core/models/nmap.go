@@ -115,9 +115,3 @@ type NmapPortDocument struct {
 	// Not exported
 	docID string `json:"-"`
 }
-
-type FullScanResults struct {
-	Hosts []*NmapHostDocument
-	Ports []*NmapPortDocument
-	Scan *NmapScanDocument
-}

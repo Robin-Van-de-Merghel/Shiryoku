@@ -1,9 +1,12 @@
 package nmap
 
 import (
+	"encoding/xml"
+	"fmt"
+	"io"
+
 	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
 	logicnmap "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/modules/nmap"
-	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
 	"github.com/Ullaakut/nmap/v4"
 	"github.com/gin-gonic/gin"
 )
@@ -13,11 +16,21 @@ func InsertNmapScans(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var nmapResults *nmap.Run
 
-		if err := c.ShouldBindJSON(&nmapResults); err != nil {
-			utils.ParseJSONError(c, err)
+		// Read raw XML body from the request
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(500, gin.H{"error": fmt.Sprintf("failed to read request body: %v", err)})
 			return
 		}
 
+		// Unmarshal XML data into nmap.Run struct
+		err = xml.Unmarshal(body, &nmapResults)
+		if err != nil {
+			c.JSON(400, gin.H{"error": fmt.Sprintf("invalid XML format: %v", err)})
+			return
+		}
+
+		// Continue as before, now you have `nmapResults` unmarshalled from XML
 		ids, err := logicnmap.SaveNmapScans(c.Request.Context(), nmapResults, nmapDB)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})

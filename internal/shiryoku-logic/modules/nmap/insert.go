@@ -12,5 +12,10 @@ func SaveNmapScans(ctx context.Context, nmapData *nmap.Run, nmapDB osdb.OpenSear
 	// Convert to documents
 	bulkItems := ConvertFullScanIntoDocuments(nmapData)
 
-	return osdb.InsertBulk(ctx, &nmapDB, bulkItems)
+	osdb.InsertBulk(ctx, &nmapDB, bulkItems.Hosts)
+	osdb.InsertBulk(ctx, &nmapDB, bulkItems.Ports)
+	osdb.InsertOne(ctx, &nmapDB, bulkItems.Scan)
+
+	// FIXME
+	return nil, nil
 }

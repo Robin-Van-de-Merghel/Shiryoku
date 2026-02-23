@@ -25,7 +25,7 @@ func SearchNmapScans(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
 
 		params.SetDefaults()
 
-		nmapResult, err := logicnmap.SearchNmapScans(c.Request.Context(), &params, nmapDB)
+		nmapResult, err := logicnmap.Search(c.Request.Context(), nmapDB, &params)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return

@@ -10,8 +10,20 @@ import (
 	"github.com/google/uuid"
 )
 
-func ConvertFullScanIntoDocuments(results *nmap.Run) []osdb.BulkItem[any] {
-	var docs []osdb.BulkItem[any]
+
+type FullScanResults struct {
+	Hosts []osdb.BulkItem[models.NmapHostDocument]
+	Ports []osdb.BulkItem[models.NmapPortDocument]
+	Scan osdb.BulkItem[models.NmapScanDocument]
+}
+
+// Converts a full nmap scan into an opensearch-usable struct
+func ConvertFullScanIntoDocuments(results *nmap.Run) *FullScanResults {
+
+	fullScanResults := &FullScanResults{
+		Hosts: []osdb.BulkItem[models.NmapHostDocument]{},  // Initialize empty Hosts slice
+		Ports: []osdb.BulkItem[models.NmapPortDocument]{},  // Initialize empty Ports slice
+	}
 
 	// First, convert the scan info (scan metadata) into a document
 	scanInfo := convertScanInfoToDocuments(results)
@@ -21,7 +33,7 @@ func ConvertFullScanIntoDocuments(results *nmap.Run) []osdb.BulkItem[any] {
 		// Convert host to a document
 		hostItem := convertHostToDocument(&host, scanInfo.ID)
 		// Add the host document to the bulk items (append as BulkItem[any])
-		docs = append(docs, osdb.BulkItem[any]{
+		fullScanResults.Hosts = append(fullScanResults.Hosts, osdb.BulkItem[models.NmapHostDocument]{
 			Index: "nmap-hosts",
 			ID:    hostItem.ID, // Extract ID from hostItem
 			Doc:   hostItem.Doc, // Extract Doc from hostItem
@@ -32,17 +44,17 @@ func ConvertFullScanIntoDocuments(results *nmap.Run) []osdb.BulkItem[any] {
 
 		// Convert ports to documents for the current host
 		portItems := convertHostPortsToDocuments(&host, scanInfo.ID, hostItem.ID)
-		docs = append(docs, portItems...) // Add all port documents to the bulk items
+		
+		fullScanResults.Ports = append(fullScanResults.Ports, portItems...) // Add all port documents to the bulk items
 	}
 
-	// Insert the scan document at the end (it's likely an important document to first insert in your bulk operation)
-	docs = append(docs, osdb.BulkItem[any]{
+	fullScanResults.Scan = osdb.BulkItem[models.NmapScanDocument]{
 		Index: "nmap-scans",
 		ID:    scanInfo.ID,
 		Doc:   scanInfo.Doc,
-	})
+	}
 
-	return docs
+	return fullScanResults 
 }
 
 // Convert all ports info to multiple documents

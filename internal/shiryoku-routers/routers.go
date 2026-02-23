@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetFilledRouter(nmapDB *osdb.NmapDB, modules []config.APIModule) *gin.Engine {
+func GetFilledRouter(nmapDB *osdb.OpenSearchClient, modules []config.APIModule) *gin.Engine {
 
 	// Main router
 	router := gin.Default()

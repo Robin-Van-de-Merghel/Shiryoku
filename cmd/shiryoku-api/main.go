@@ -19,14 +19,14 @@ func main() {
 	}
 
 	// Wrap in NmapDB
-	nmapDB := osdb.NewNmapDB(osdb.NewOpenSearchClient(osClient))
+	osdbClient := osdb.NewOpenSearchClient(osClient)
 
 	// Get the modules
-	default_modules := modules.GetDefaultModules(nmapDB)
+	default_modules := modules.GetDefaultModules(*osdbClient)
 	// TODO: Import external ones
 
 	// Pass to router
-	router := shiryoku_routers.GetFilledRouter(nmapDB, default_modules)
+	router := shiryoku_routers.GetFilledRouter(osdbClient, default_modules)
 
 	// FIXME: port from config
 	router.Run(":8080")
