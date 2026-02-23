@@ -9,29 +9,37 @@ import (
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
 	models_widgets "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
 	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+	logic_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/common"
 	logic_nmap "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/modules/nmap"
 )
 
 // GetLatestWidgetScans fetches the latest scans with host and port info
-func GetLatestWidgetScans(ctx context.Context, client osdb.OpenSearchClient, input models_widgets.WidgetDashboardInput) ([]models_widgets.WidgetDashboardScan, error) {
+func GetLatestWidgetScans(ctx context.Context, client osdb.OpenSearchClient, input models_widgets.WidgetDashboardInput) (*logic_common.SearchResult[models_widgets.WidgetDashboardScan], error) {
+	
 	// Fetch latest scans
-	scans, err := fetchLatestScans(ctx, client, uint64(input.PerPage), input.Page, input.SortDirection)
+	scans, err := fetchLatestScans(ctx, client, input.PerPage, input.Page, input.SortDirection)
 	if err != nil {
 		return nil, err
 	}
-
+	
+	// Get total count from the search result
+	totalScans := uint64(len(scans)) // This is the page count, adjust if your fetchLatestScans returns total
+	
 	if len(scans) == 0 {
-		return []models_widgets.WidgetDashboardScan{}, nil
+		return &logic_common.SearchResult[models_widgets.WidgetDashboardScan]{
+			Total:   0,
+			Results: []models_widgets.WidgetDashboardScan{},
+		}, nil
 	}
-
+	
 	// Extract scan IDs and host IDs from scans
 	scanIDs := make([]string, 0, len(scans))
 	hostIDsSet := make(map[string]struct{})
-
+	
 	for _, s := range scans {
 		scanID, _ := s["scan_id"].(string)
 		scanIDs = append(scanIDs, scanID)
-
+		
 		if hosts, ok := s["host_id"].([]any); ok {
 			for _, h := range hosts {
 				if hs, ok := h.(string); ok {
@@ -46,27 +54,30 @@ func GetLatestWidgetScans(ctx context.Context, client osdb.OpenSearchClient, inp
 			}
 		}
 	}
-
+	
 	// Convert host set to slice
 	hostIDs := make([]string, 0, len(hostIDsSet))
 	for h := range hostIDsSet {
 		hostIDs = append(hostIDs, h)
 	}
-
+	
 	// Fetch host info
 	hostMap, err := fetchHosts(ctx, client, hostIDs)
 	if err != nil {
 		return nil, err
 	}
-
+	
 	// Fetch ports for all scans
 	portResults, err := fetchPorts(ctx, client, scanIDs)
 	if err != nil {
 		return nil, err
 	}
-
+	
 	// Build results
-	return buildDashboardScans(scans, hostMap, portResults), nil
+	return &logic_common.SearchResult[models_widgets.WidgetDashboardScan]{
+		Total:   totalScans,
+		Results: buildDashboardScans(scans, hostMap, portResults),
+	}, nil
 }
 
 // buildDashboardScans converts raw scan/host/port data into flat WidgetDashboardScan objects
@@ -94,6 +105,8 @@ func buildDashboardScans(scanResults []map[string]any, hostMap map[string]models
 		portMap[key] = append(portMap[key], uint16(portFloat))
 	}
 
+	fmt.Printf("DEBUG buildDashboardScans: portMap has %d entries\n", len(portMap))
+
 	// Build scan objects
 	results := make([]models_widgets.WidgetDashboardScan, 0, len(scanResults))
 	for _, s := range scanResults {
@@ -114,29 +127,47 @@ func buildDashboardScans(scanResults []map[string]any, hostMap map[string]models
 			hosts = h
 		}
 
-		// Create a scan entry for each host in the scan
-		for _, hostInterface := range hosts {
+		fmt.Printf("DEBUG: Scan %s has %d hosts in scan data\n", scanID, len(hosts))
+		for i, hostInterface := range hosts {
 			hostIDComposite, ok := hostInterface.(string)
 			if !ok {
+				fmt.Printf("DEBUG:   Host[%d] is not a string: %T\n", i, hostInterface)
 				continue
 			}
+
+			fmt.Printf("DEBUG:   Host[%d] raw value = %s\n", i, hostIDComposite)
 
 			// Extract just the host ID part
 			hostID := hostIDComposite
 			parts := strings.Split(hostIDComposite, ":")
 			if len(parts) == 2 {
 				hostID = parts[1]
+				fmt.Printf("DEBUG:   Host[%d] extracted ID = %s (from composite %s)\n", i, hostID, hostIDComposite)
+			} else {
+				fmt.Printf("DEBUG:   Host[%d] no colon found, using as-is: %s\n", i, hostID)
 			}
 
 			// Get host info
 			hostInfo, hostExists := hostMap[hostID]
 			if !hostExists {
+				fmt.Printf("DEBUG:   Host %s NOT FOUND in hostMap (hostMap has %d entries)\n", hostID, len(hostMap))
+				// Debug: show first 3 keys in hostMap
+				count := 0
+				for k := range hostMap {
+					if count < 3 {
+						fmt.Printf("DEBUG:     hostMap key example: %s\n", k)
+					}
+					count++
+				}
 				continue
 			}
+
+			fmt.Printf("DEBUG:   Host %s FOUND in hostMap\n", hostID)
 
 			// Get ports for this scan+host combination
 			key := scanKey{ScanID: scanID, HostID: hostID}
 			ports := portMap[key]
+			fmt.Printf("DEBUG:   Scan %s Host %s has %d ports\n", scanID, hostID, len(ports))
 
 			results = append(results, models_widgets.WidgetDashboardScan{
 				ScanID:    scanID,
@@ -149,13 +180,14 @@ func buildDashboardScans(scanResults []map[string]any, hostMap map[string]models
 		}
 	}
 
+	fmt.Printf("DEBUG buildDashboardScans: Returning %d results\n", len(results))
 	return results
 }
 
 // fetchLatestScans fetches scans from OpenSearch
 func fetchLatestScans(ctx context.Context, client osdb.OpenSearchClient, perPage, pageNumber uint64, sortDir models.SortDirection) ([]map[string]any, error) {
 	params := &models.SearchParams{
-		PerPage:    uint8(perPage),
+		PerPage:    perPage,
 		Page:       pageNumber,
 		Sort:       []models.SortSpec{{Parameter: "scan_start", Direction: sortDir}},
 		Parameters: []string{"scan_id", "scan_start", "host_id"},
@@ -190,7 +222,7 @@ func fetchHosts(ctx context.Context, client osdb.OpenSearchClient, hostIDs []str
 				},
 			},
 		},
-		PerPage: uint8(100),
+		PerPage: models.MAX_RESULTS_PER_PAGE, // Should be 1000 - fetch all hosts
 	}
 	results, err := client.Search(ctx, logic_nmap.NMAP_HOSTS_INDEX, params)
 	if err != nil {
@@ -234,11 +266,12 @@ func fetchPorts(ctx context.Context, client osdb.OpenSearchClient, scanIDs []str
 				},
 			},
 		},
-		PerPage: uint8(255), // Maximum uint8 value to get all ports in one query
+		PerPage: 255, // Maximum uint8 value to get all ports in one query
 	}
 	res, err := client.Search(ctx, logic_nmap.NMAP_PORTS_INDEX, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch ports: %w", err)
 	}
+	fmt.Printf("DEBUG fetchPorts: Got %d port results\n", len(res.Results))
 	return res.Results, nil
 }

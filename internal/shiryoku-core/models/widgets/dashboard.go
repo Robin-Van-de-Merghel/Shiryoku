@@ -26,7 +26,7 @@ type WidgetHostInfo struct {
 type WidgetDashboardInput struct {
 	SortDirection       models.SortDirection   `json:"sort"`
 	Page       uint64       `json:"page"`
-	PerPage    uint8        `json:"per_page"`
+	PerPage    uint64        `json:"per_page"`
 }
 
 func (wdi *WidgetDashboardInput) SetDefaults() {
