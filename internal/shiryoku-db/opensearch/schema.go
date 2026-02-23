@@ -169,12 +169,20 @@ func buildScalarQuery(spec *models.ScalarSearchSpec, must, mustNot *[]map[string
 
 func buildVectorQuery(spec *models.VectorSearchSpec, must, mustNot *[]map[string]any) {
 	field := spec.Parameter
+	// Add .keyword suffix for terms queries (exact match on string fields)
+	field = field + ".keyword"
+	
 	values := spec.Values
 
 	var valueSlice []any
 	switch v := values.(type) {
 	case []any:
 		valueSlice = v
+	case []string:
+		valueSlice = make([]any, len(v))
+		for i, val := range v {
+			valueSlice[i] = val
+		}
 	default:
 		valueSlice = []any{values}
 	}
