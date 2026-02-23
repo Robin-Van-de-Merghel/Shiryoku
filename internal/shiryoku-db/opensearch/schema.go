@@ -230,43 +230,74 @@ type InsertResult struct {
 	Version uint64 `json:"version"`
 }
 
-// Insert performs a generic insert/upsert and returns the document ID
-func (os *OpenSearchClient) Insert(ctx context.Context, index string, id string, document any) (*InsertResult, error) {
-	bodyBytes, err := json.Marshal(document)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal document: %w", err)
+type BulkItem[T any] struct {
+	Index string `json:"_index"`
+	ID    string `json:"_id"`
+	Doc   T      `json:"doc"`
+}
+
+// InsertBulk performs a bulk insert operation in OpenSearch
+func InsertBulk[T any](ctx context.Context, client *OpenSearchClient, documents []BulkItem[T]) ([]*InsertResult, error) {
+	// Prepare the body of the bulk request
+	var bulkBody []string
+	for _, document := range documents {
+		// Convert each BulkItem[T] to JSON
+		docJSON, err := json.Marshal(document.Doc)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal document: %w", err)
+		}
+
+		// Add the bulk header for the document
+		bulkBody = append(bulkBody, fmt.Sprintf(`{ "index": { "_index": "%s", "_id": "%s" } }`, document.Index, document.ID))
+		// Add the document body
+		bulkBody = append(bulkBody, string(docJSON))
 	}
 
-	req := opensearchapi.IndexRequest{
-		Index:      index,
-		DocumentID: id,
-		Body:       strings.NewReader(string(bodyBytes)),
+	// Create the bulk request
+	req := opensearchapi.BulkRequest{
+		Body: strings.NewReader(strings.Join(bulkBody, "\n") + "\n"),
 	}
 
-	res, err := req.Do(ctx, os.client)
+	// Execute the bulk request
+	res, err := req.Do(ctx, client.client)
 	if err != nil {
-		return nil, fmt.Errorf("opensearch insert failed: %w", err)
+		return nil, fmt.Errorf("opensearch bulk insert failed: %w", err)
 	}
 	defer res.Body.Close()
 
+	// Parse the response from OpenSearch
 	var indexResponse struct {
-		ID      string `json:"_id"`
-		Index   string `json:"_index"`
-		Version uint64 `json:"_version"`
+		Items []struct {
+			Index struct {
+				ID      string `json:"_id"`
+				Index   string `json:"_index"`
+				Version uint64 `json:"_version"`
+			} `json:"index"`
+		} `json:"items"`
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(&indexResponse); err != nil {
-		return nil, fmt.Errorf("failed to decode insert response: %w", err)
+		return nil, fmt.Errorf("failed to decode bulk insert response: %w", err)
 	}
 
-	return &InsertResult{
-		ID:      indexResponse.ID,
-		Index:   indexResponse.Index,
-		Version: indexResponse.Version,
-	}, nil
+	// Collect the results (IDs, versions, etc.)
+	var results []*InsertResult
+	for _, item := range indexResponse.Items {
+		results = append(results, &InsertResult{
+			ID:      item.Index.ID,
+			Index:   item.Index.Index,
+			Version: item.Index.Version,
+		})
+	}
+
+	return results, nil
 }
 
-// Upsert performs an insert or update
-func (os *OpenSearchClient) Upsert(ctx context.Context, index string, id string, document any) (*InsertResult, error) {
-	return os.Insert(ctx, index, id, document)
+// InsertOne wraps InsertBulk for a single document
+func InsertOne[T any](ctx context.Context, client *OpenSearchClient, doc BulkItem[T]) (*InsertResult, error) {
+	results, err := InsertBulk(ctx, client, []BulkItem[T]{doc})
+	if err != nil {
+		return nil, err
+	}
+	return results[0], nil
 }

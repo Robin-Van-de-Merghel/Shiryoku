@@ -41,7 +41,7 @@ type APIModule struct {
 
 	// DB instance
 	// FIXME: Use generic?
-	NMapDB osdb.NmapDBIface
+	OSDB osdb.OpenSearchClient
 
 	// Callback to setup the API routes
 	// It needs a subgroup. This subgroup separates the endpoints for each module.

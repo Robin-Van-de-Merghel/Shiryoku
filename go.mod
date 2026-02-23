@@ -3,8 +3,10 @@ module github.com/Robin-Van-de-Merghel/Shiryoku
 go 1.25.0
 
 require (
+	github.com/Ullaakut/nmap/v4 v4.0.0
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.27.0
+	github.com/google/uuid v1.6.0
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/stretchr/testify v1.11.1
 )

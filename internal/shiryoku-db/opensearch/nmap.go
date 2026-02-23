@@ -46,30 +46,6 @@ func (db *NmapDB) Search(ctx context.Context, params *models.SearchParams) (*Nma
 	}, nil
 }
 
-// Insert explodes NmapData into one document per port and bulk-inserts them
-func (db *NmapDB) Insert(ctx context.Context, docs []models.NmapDocument) ([]string, error) {
-	ids := make([]string, 0, len(docs))
-
-	for _, doc := range docs {
-
-		// Verify that host is defined
-		if doc.Host == "" {
-			// TODO: Logs
-			continue
-		}
-
-		// ID = host:port to allow upsert
-		id := fmt.Sprintf("%s:%d", doc.Host, doc.Port)
-		result, err := db.osClient.Insert(ctx, nmapIndex, id, doc)
-		if err != nil {
-			return ids, fmt.Errorf("failed to insert document for port %d: %w", doc.Port, err)
-		}
-		ids = append(ids, result.ID)
-	}
-
-	return ids, nil
-}
-
 func parseNmapDocument(rawData map[string]any) (models.NmapDocument, error) {
 	// Re-marshal and unmarshal into the struct — clean and safe
 	b, err := json.Marshal(rawData)

@@ -1,4 +1,4 @@
-package nmap
+package logic_nmap
 
 import (
 	"context"
@@ -8,6 +8,6 @@ import (
 )
 
 // SearchNmapScans returns nmap scan results matching the given params
-func SearchNmapScans(ctx context.Context, searchParams *models.SearchParams, nmapDB osdb.NmapDBIface) (*osdb.NmapSearchResult, error) {
-	return nmapDB.Search(ctx, searchParams)
+func SearchNmapScans(ctx context.Context, searchParams *models.SearchParams, nmapDB osdb.OpenSearchClient) (*osdb.NmapSearchResult, error) {
+	return nmapDB.Search(ctx, "nmap-ports", searchParams)
 }

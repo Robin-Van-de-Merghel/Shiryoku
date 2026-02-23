@@ -7,9 +7,9 @@ import (
 
 func SetupNmapRoutes(nmap_group *gin.RouterGroup, nmapModuleConfig config.APIModule) {
 	// Routes
-	nmap_group.POST("/search", SearchNmapScans(nmapModuleConfig.NMapDB))
+	nmap_group.POST("/search", SearchNmapScans(nmapModuleConfig.OSDB))
 
 	// FIXME: Refactorize
 	// nmap_group.POST("/", InsertNmapScan(nmapModuleConfig.NMapDB))
-	nmap_group.POST("/batch", InsertNmapScans(nmapModuleConfig.NMapDB))
+	nmap_group.POST("/batch", InsertNmapScans(nmapModuleConfig.OSDB))
 }

@@ -10,7 +10,7 @@ import (
 
 // SearchNmapScans returns a gin handler injected with the given NmapDBIface.
 // Call with no argument in tests to use the DummyNmapDB automatically.
-func SearchNmapScans(nmapDB osdb.NmapDBIface) func(c *gin.Context) {
+func SearchNmapScans(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var params models.SearchParams
 

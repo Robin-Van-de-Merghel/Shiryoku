@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 // Adapted from: https://github.com/Ullaakut/nmap/blob/master/xml.go
 // Initially, I stored it in a nested document
 // -> Not practical for querying
@@ -54,25 +56,45 @@ type NmapScriptResult struct {
 	Output string `json:"output"`
 }
 
-// NmapDocument is a flat (easy to store) document for indexing nmap results (one per port).
-type NmapDocument struct {
-	// Scan metadata
-	ScanID      string `json:"scan_id,omitempty"`      // optional unique ID per scan
-	ScanStart   int64  `json:"scan_start,omitempty"`   // epoch timestamp
-	ScanArgs    string `json:"scan_args,omitempty"`    // command line args
-	NmapVersion string `json:"nmap_version,omitempty"` // e.g. "7.94"
+// NmapHostDocument is dedicated to storing host info
+type NmapHostDocument struct {
+	// Host metadata
+	Comment string `json:"comment,omitempty"` // See nmap doc
 
 	// Host information
-	Host       string   `json:"host"`                  // primary IP
+	HostID string `json:"host_id,omitempty"`
+	Host       string   `json:"host"`                  // (takes first address) 
+	Addresses []string `json:"addresses,omitempty"`
 	Hostnames  []string `json:"hostnames,omitempty"`   // DNS names
 	HostStatus string   `json:"host_status,omitempty"` // up / down
-	MACAddress string   `json:"mac_address,omitempty"`
-	MACVendor  string   `json:"mac_vendor,omitempty"`
 
 	// OS detection
 	OSName     string   `json:"os_name,omitempty"`
 	OSAccuracy int      `json:"os_accuracy,omitempty"`
-	OSCPE      []string `json:"os_cpe,omitempty"`
+
+	// Not exported
+	docID string `json:"-"`
+}
+
+
+// NmapScanDocument stores only scan info (uuid,)
+type NmapScanDocument struct {
+	ScanID string `json:"scan_id,omitempty"`
+	HostIDs []string `json:"host_id,omitempty"`
+	ScanStart   time.Time  `json:"scan_start"`   // epoch timestamp
+	ScanArgs    string `json:"scan_args,omitempty"`    // command line args
+	NmapVersion string `json:"nmap_version,omitempty"` // e.g. "7.94"
+
+	// Not exported
+	docID string `json:"-"`
+
+}
+
+// NmapPortDocument aims at storing port results, without host and scan info (for storage sake) 
+type NmapPortDocument struct {
+	// ScanID and HostID: uuid
+	ScanID string `json:"scan_id,omitempty"`
+	HostID string `json:"host_id,omitempty"`
 
 	// Port information
 	Port      uint16     `json:"port"`
@@ -85,8 +107,17 @@ type NmapDocument struct {
 	ServiceVersion   string   `json:"service_version,omitempty"`    // version
 	ServiceExtraInfo string   `json:"service_extra_info,omitempty"` // extra info string
 	ServiceTunnel    string   `json:"service_tunnel,omitempty"`     // e.g. ssl
-	ServiceCPE       []string `json:"service_cpe,omitempty"`        // CPE strings
+	// TODO: See if we need more
 
 	// NSE scripts
 	Scripts []NmapScriptResult `json:"scripts,omitempty"`
+
+	// Not exported
+	docID string `json:"-"`
+}
+
+type FullScanResults struct {
+	Hosts []*NmapHostDocument
+	Ports []*NmapPortDocument
+	Scan *NmapScanDocument
 }
