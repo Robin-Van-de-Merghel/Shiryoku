@@ -23,7 +23,7 @@ func setupRouter() *gin.Engine {
 	transport := opensearch_testing.NewMockTransport()
 	osClient, _ := opensearch_testing.NewMockOpenSearchClient(transport)
 
-	// Connect to a virtual opensearch db 
+	// Connect to a virtual opensearch db
 	osdbClient := osdb.NewOpenSearchClient(osClient)
 
 	api_group := r.Group("/api")

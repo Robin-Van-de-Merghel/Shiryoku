@@ -40,7 +40,7 @@ func NewMockTransport() *MockTransport {
 
 // NewMockOpenSearchClient returns a real *opensearch.Client backed by MockTransport.
 // Use it exactly like opensearch.NewClient(...) — just pass the result to osdb.NewOpenSearchClient.
-// Helps keeping the logic 
+// Helps keeping the logic
 func NewMockOpenSearchClient(t *MockTransport) (*opensearch.Client, error) {
 	return opensearch.NewClient(opensearch.Config{
 		Addresses: []string{"http://localhost:9200"},

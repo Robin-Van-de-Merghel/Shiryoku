@@ -13,7 +13,7 @@ func GetDefaultModules(client osdb.OpenSearchClient) []config.APIModule {
 		Name:              "NMap Module",
 		Description:       "Use to parse nmap results and query them.",
 		Path:              "/nmap",
-		OSDB:            client,
+		OSDB:              client,
 		SetupModuleRoutes: nmap.SetupNmapRoutes,
 	})
 

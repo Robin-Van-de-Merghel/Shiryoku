@@ -62,35 +62,27 @@ type NmapHostDocument struct {
 	Comment string `json:"comment,omitempty"` // See nmap doc
 
 	// Host information
-	HostID string `json:"host_id,omitempty"`
-	Host       string   `json:"host"`                  // (takes first address) 
-	Addresses []string `json:"addresses,omitempty"`
+	HostID     string   `json:"host_id,omitempty"`
+	Host       string   `json:"host"` // (takes first address)
+	Addresses  []string `json:"addresses,omitempty"`
 	Hostnames  []string `json:"hostnames,omitempty"`   // DNS names
 	HostStatus string   `json:"host_status,omitempty"` // up / down
 
 	// OS detection
-	OSName     string   `json:"os_name,omitempty"`
-	OSAccuracy int      `json:"os_accuracy,omitempty"`
-
-	// Not exported
-	docID string `json:"-"`
+	OSName     string `json:"os_name,omitempty"`
+	OSAccuracy int    `json:"os_accuracy,omitempty"`
 }
-
 
 // NmapScanDocument stores only scan info (uuid,)
 type NmapScanDocument struct {
-	ScanID string `json:"scan_id,omitempty"`
-	HostIDs []string `json:"host_id,omitempty"`
-	ScanStart   time.Time  `json:"scan_start"`   // epoch timestamp
-	ScanArgs    string `json:"scan_args,omitempty"`    // command line args
-	NmapVersion string `json:"nmap_version,omitempty"` // e.g. "7.94"
-
-	// Not exported
-	docID string `json:"-"`
-
+	ScanID      string    `json:"scan_id,omitempty"`
+	HostIDs     []string  `json:"host_id,omitempty"`
+	ScanStart   time.Time `json:"scan_start"`             // epoch timestamp
+	ScanArgs    string    `json:"scan_args,omitempty"`    // command line args
+	NmapVersion string    `json:"nmap_version,omitempty"` // e.g. "7.94"
 }
 
-// NmapPortDocument aims at storing port results, without host and scan info (for storage sake) 
+// NmapPortDocument aims at storing port results, without host and scan info (for storage sake)
 type NmapPortDocument struct {
 	// ScanID and HostID: uuid
 	ScanID string `json:"scan_id,omitempty"`
@@ -102,16 +94,13 @@ type NmapPortDocument struct {
 	PortState PortStatus `json:"port_state,omitempty"` // open / closed / filtered / ...
 
 	// Service detection
-	ServiceName      string   `json:"service_name,omitempty"`       // e.g. http, ssh
-	ServiceProduct   string   `json:"service_product,omitempty"`    // product name
-	ServiceVersion   string   `json:"service_version,omitempty"`    // version
-	ServiceExtraInfo string   `json:"service_extra_info,omitempty"` // extra info string
-	ServiceTunnel    string   `json:"service_tunnel,omitempty"`     // e.g. ssl
+	ServiceName      string `json:"service_name,omitempty"`       // e.g. http, ssh
+	ServiceProduct   string `json:"service_product,omitempty"`    // product name
+	ServiceVersion   string `json:"service_version,omitempty"`    // version
+	ServiceExtraInfo string `json:"service_extra_info,omitempty"` // extra info string
+	ServiceTunnel    string `json:"service_tunnel,omitempty"`     // e.g. ssl
 	// TODO: See if we need more
 
 	// NSE scripts
 	Scripts []NmapScriptResult `json:"scripts,omitempty"`
-
-	// Not exported
-	docID string `json:"-"`
 }

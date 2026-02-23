@@ -10,19 +10,18 @@ import (
 	"github.com/google/uuid"
 )
 
-
 type FullScanResults struct {
 	Hosts []osdb.BulkItem[models.NmapHostDocument]
 	Ports []osdb.BulkItem[models.NmapPortDocument]
-	Scan osdb.BulkItem[models.NmapScanDocument]
+	Scan  osdb.BulkItem[models.NmapScanDocument]
 }
 
 // Converts a full nmap scan into an opensearch-usable struct
 func ConvertFullScanIntoDocuments(results *nmap.Run) *FullScanResults {
 
 	fullScanResults := &FullScanResults{
-		Hosts: []osdb.BulkItem[models.NmapHostDocument]{},  // Initialize empty Hosts slice
-		Ports: []osdb.BulkItem[models.NmapPortDocument]{},  // Initialize empty Ports slice
+		Hosts: []osdb.BulkItem[models.NmapHostDocument]{}, // Initialize empty Hosts slice
+		Ports: []osdb.BulkItem[models.NmapPortDocument]{}, // Initialize empty Ports slice
 	}
 
 	// First, convert the scan info (scan metadata) into a document
@@ -35,7 +34,7 @@ func ConvertFullScanIntoDocuments(results *nmap.Run) *FullScanResults {
 		// Add the host document to the bulk items (append as BulkItem[any])
 		fullScanResults.Hosts = append(fullScanResults.Hosts, osdb.BulkItem[models.NmapHostDocument]{
 			Index: "nmap-hosts",
-			ID:    hostItem.ID, // Extract ID from hostItem
+			ID:    hostItem.ID,  // Extract ID from hostItem
 			Doc:   hostItem.Doc, // Extract Doc from hostItem
 		})
 
@@ -44,7 +43,7 @@ func ConvertFullScanIntoDocuments(results *nmap.Run) *FullScanResults {
 
 		// Convert ports to documents for the current host
 		portItems := convertHostPortsToDocuments(&host, scanInfo.ID, hostItem.ID)
-		
+
 		fullScanResults.Ports = append(fullScanResults.Ports, portItems...) // Add all port documents to the bulk items
 	}
 
@@ -54,7 +53,7 @@ func ConvertFullScanIntoDocuments(results *nmap.Run) *FullScanResults {
 		Doc:   scanInfo.Doc,
 	}
 
-	return fullScanResults 
+	return fullScanResults
 }
 
 // Convert all ports info to multiple documents
@@ -80,13 +79,13 @@ func convertHostPortsToDocuments(h *nmap.Host, scanID string, hostID string) []o
 
 		// FIXME: constants for index
 		bulkItems = append(bulkItems, osdb.BulkItem[models.NmapPortDocument]{
-			ID: fmt.Sprintf("%s:%s:%d", scanID, hostID, doc.Port),
+			ID:    fmt.Sprintf("%s:%s:%d", scanID, hostID, doc.Port),
 			Index: "nmap-ports",
-			Doc: doc,
+			Doc:   doc,
 		})
 	}
 
-	return bulkItems 
+	return bulkItems
 }
 
 // Convert scan info into single document
@@ -96,28 +95,28 @@ func convertScanInfoToDocuments(si *nmap.Run) osdb.BulkItem[models.NmapScanDocum
 
 	// Unique ID to find
 	doc.ScanID = uuid.NewString()
-	doc.HostIDs = []string{} // Filled later 
+	doc.HostIDs = []string{} // Filled later
 	doc.ScanArgs = si.Args
 	doc.NmapVersion = si.Version
 	doc.ScanStart = time.Time(si.Start)
 
 	// Fixme: constant for index
 	return osdb.BulkItem[models.NmapScanDocument]{
-		ID: doc.ScanID,
+		ID:    doc.ScanID,
 		Index: "nmap-scans",
-	} 
+	}
 }
 
 // Convert a host data to a single document
 // Cf https://github.com/Ullaakut/nmap/blob/5b5552b95453ccf933110e2b48c58cf67160ce1c/xml.go#L101C1-L121C2
 func convertHostToDocument(h *nmap.Host, scanID string) osdb.BulkItem[models.NmapHostDocument] {
 	var doc models.NmapHostDocument
-	
+
 	doc.Addresses = convertAddresses(h.Addresses)
 	// Host = first address
 	doc.HostID = uuid.NewString()
 	doc.Host = doc.Addresses[0]
-	doc.Hostnames = convertHostnames(h.Hostnames) 
+	doc.Hostnames = convertHostnames(h.Hostnames)
 	doc.Addresses = convertAddresses(h.Addresses)
 	doc.HostStatus = h.Status.State
 	doc.Comment = h.Comment
@@ -129,14 +128,14 @@ func convertHostToDocument(h *nmap.Host, scanID string) osdb.BulkItem[models.Nma
 	// FIXME: Constants for nmap-host
 	return osdb.BulkItem[models.NmapHostDocument]{
 		Index: "nmap-hosts",
-		ID: fmt.Sprintf("%s:%s", scanID, doc.HostID),
-		Doc: doc,	
+		ID:    fmt.Sprintf("%s:%s", scanID, doc.HostID),
+		Doc:   doc,
 	}
 }
 
 // Get all ips
 func convertAddresses(addresses []nmap.Address) []string {
-	var ips []string 
+	var ips []string
 
 	for _, address := range addresses {
 		ips = append(ips, address.Addr)
@@ -173,7 +172,7 @@ func convertOS(matches []nmap.OSMatch) (string, int) {
 		}
 	}
 
-	return maxAccName, maxAcc 
+	return maxAccName, maxAcc
 }
 
 func convertScripts(rawScripts []nmap.Script) []models.NmapScriptResult {
@@ -181,7 +180,7 @@ func convertScripts(rawScripts []nmap.Script) []models.NmapScriptResult {
 
 	for _, script := range rawScripts {
 		scripts = append(scripts, models.NmapScriptResult{
-			ID: script.ID,
+			ID:     script.ID,
 			Output: script.Output,
 		})
 	}

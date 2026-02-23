@@ -29,5 +29,10 @@ func main() {
 	router := shiryoku_routers.GetFilledRouter(osdbClient, default_modules)
 
 	// FIXME: port from config
-	router.Run(":8080")
+	err = router.Run(":8080")
+
+	if err != nil {
+		// Rather kill instantly
+		panic(err)
+	}
 }

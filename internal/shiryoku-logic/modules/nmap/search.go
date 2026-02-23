@@ -12,10 +12,9 @@ import (
 const nmapIndex = "nmap-scans"
 
 type NmapSearchResult struct {
-	Total   uint64                `json:"total"`
+	Total   uint64                    `json:"total"`
 	Results []models.NmapScanDocument `json:"results"`
 }
-
 
 // SearchNmapScans returns nmap scan results matching the given params
 func Search(ctx context.Context, NmapDB osdb.OpenSearchClient, params *models.SearchParams) (*NmapSearchResult, error) {
