@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+	opensearch_testing "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch/testing"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -18,14 +19,19 @@ func setupRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(utils.ErrorRecoveryMiddleware())
 
-	dummyDB := osdb.NewDummyNmapDB()
+	// Build the mock
+	transport := opensearch_testing.NewMockTransport()
+	osClient, _ := opensearch_testing.NewMockOpenSearchClient(transport)
+
+	// Connect to a virtual opensearch db 
+	osdbClient := osdb.NewOpenSearchClient(osClient)
 
 	api_group := r.Group("/api")
 	{
 		modules_group := api_group.Group("/modules")
 		{
 			nmap_group := modules_group.Group("/nmap")
-			nmap_group.POST("/search", SearchNmapScans(dummyDB))
+			nmap_group.POST("/search", SearchNmapScans(*osdbClient))
 		}
 	}
 	return r

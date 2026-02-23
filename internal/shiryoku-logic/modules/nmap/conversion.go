@@ -80,7 +80,7 @@ func convertHostPortsToDocuments(h *nmap.Host, scanID string, hostID string) []o
 
 		// FIXME: constants for index
 		bulkItems = append(bulkItems, osdb.BulkItem[models.NmapPortDocument]{
-			ID: fmt.Sprintf("%s:%s:%s", scanID, hostID, doc.Port),
+			ID: fmt.Sprintf("%s:%s:%d", scanID, hostID, doc.Port),
 			Index: "nmap-ports",
 			Doc: doc,
 		})
