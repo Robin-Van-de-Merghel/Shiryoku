@@ -3,38 +3,21 @@ package nmap
 import (
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
 	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
-	logic_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/common"
 	logic_nmap "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/modules/nmap"
-	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
+	router_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/common"
 	"github.com/gin-gonic/gin"
 )
 
-// SearchNmapScans returns a gin handler injected with the given opensearchDB.
+// Multiple scanners are available: scans, hosts and ports
+
 func SearchNmapScans(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
-	return func(c *gin.Context) {
-		var params models.SearchParams
+	return router_common.SearchOpenSearch[models.NmapScanDocument](nmapDB, logic_nmap.NMAP_SCANS_INDEX)
+}
 
-		if err := c.ShouldBindJSON(&params); err != nil {
-			utils.ParseJSONError(c, err)
-			return
-		}
+func SearchNmapPorts(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
+	return router_common.SearchOpenSearch[models.NmapPortDocument](nmapDB, logic_nmap.NMAP_PORTS_INDEX)
+}
 
-		if !utils.ValidateAndRespond(c, params, utils.SearchSchema) {
-			return
-		}
-
-		params.SetDefaults()
-
-		nmapResult, err := logic_common.Search[models.NmapHostDocument](
-			c.Request.Context(), 
-			nmapDB, &params, 
-			logic_nmap.NMAP_HOSTS_INDEX,
-		)
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(200, nmapResult)
-	}
+func SearchNmapHosts(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
+	return router_common.SearchOpenSearch[models.NmapHostDocument](nmapDB, logic_nmap.NMAP_HOSTS_INDEX)
 }
