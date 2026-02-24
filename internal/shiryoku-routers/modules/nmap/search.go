@@ -1,4 +1,4 @@
-package nmap
+package routers_modules_nmap 
 
 import (
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"

@@ -1,4 +1,4 @@
-package nmap
+package routers_modules_nmap
 
 import (
 	"encoding/xml"
