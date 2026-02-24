@@ -1,4 +1,4 @@
-package logic_widget
+package logic_widgets_dashboard
 
 import (
 	"context"

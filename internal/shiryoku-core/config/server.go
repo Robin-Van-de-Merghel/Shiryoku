@@ -45,7 +45,7 @@ type APIModule struct {
 
 	// Callback to setup the API routes
 	// It needs a subgroup. This subgroup separates the endpoints for each module.
-	SetupModuleRoutes func(*gin.RouterGroup, APIModule)
+	SetupModuleRoutes func(*gin.RouterGroup, osdb.OpenSearchClient, string)
 }
 
 // Server config, contains everything that can be modified
@@ -59,4 +59,26 @@ type ServerConfig struct {
 	// Databases
 	// [DBName] -> [Config]
 	DBConfigs map[string]DBConfig
+
+	// Modules are generic exposed API
+	Modules []APIModule
+
+	// Widgets are UI-specific
+	Widgets []APIModule
 }
+
+func NewServerConfig() *ServerConfig {
+	return &ServerConfig{
+		Port: 8080,
+		LogLevel: LOG_LEVEL_DEBUG,
+		DBConfigs: map[string]DBConfig{
+			"OSDB": {
+				Host: "localhost",
+				Port: 9200,
+			},
+		},
+		Modules: []APIModule{},
+		Widgets: []APIModule{},
+	}
+}
+

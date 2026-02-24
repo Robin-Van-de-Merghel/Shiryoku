@@ -2,13 +2,12 @@ package shiryoku_routers
 
 import (
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config"
-	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/status"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
 	"github.com/gin-gonic/gin"
 )
 
-func GetFilledRouter(nmapDB *osdb.OpenSearchClient, modules []config.APIModule) *gin.Engine {
+func GetFilledRouter(serverConfig config.ServerConfig) *gin.Engine {
 
 	// Main router
 	router := gin.Default()
@@ -26,12 +25,25 @@ func GetFilledRouter(nmapDB *osdb.OpenSearchClient, modules []config.APIModule) 
 		// Modules group
 		modules_group := api_group.Group("/modules")
 
-		for _, module := range modules {
+		for _, module := range serverConfig.Modules {
 			// Create the custom module (e.g. /nmap)
 			current_group := modules_group.Group(module.Path)
 
 			// Import all routes
-			module.SetupModuleRoutes(current_group, module)
+			module.SetupModuleRoutes(current_group, module.OSDB, module.Path)
+		}
+	}
+
+	{
+		// Widgets group
+		dashboard_group := api_group.Group("/widgets")
+
+		for _, module := range serverConfig.Widgets {
+			// Create the custom widget (e.g. /last_scans)
+			current_group := dashboard_group.Group(module.Path)
+
+			// Import all routes
+			module.SetupModuleRoutes(current_group, module.OSDB, module.Path)
 		}
 	}
 
