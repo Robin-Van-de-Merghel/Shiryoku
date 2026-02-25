@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
+	models_widgets "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
 )
 
 // SearchableRepository is a generic interface for any resource that supports search and pagination
@@ -38,4 +40,10 @@ type NmapRepository interface {
 	
 	// InsertScripts inserts NSE script results
 	InsertScripts(ctx context.Context, scripts []models.NmapScriptResult) error
+}
+
+// DashboardRepository defines operations specific to dashboard views
+type DashboardRepository interface {
+	// GetDashboardScans retrieves paginated scan-host combinations from materialized view
+	GetDashboardScans(ctx context.Context, params *models.SearchParams) (uint64, []models_widgets.WidgetDashboardScan, error)
 }

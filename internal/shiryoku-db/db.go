@@ -10,6 +10,8 @@ import (
 type Repositories struct {
 	// Nmap scan data repository
 	Nmap postgres.NmapRepository
+	// Dashboard view repository
+	Dashboard postgres.DashboardRepository
 }
 
 // InitDB initializes the database connection and returns all configured repositories
@@ -20,6 +22,7 @@ func InitDB(dsn string) (*Repositories, error) {
 	}
 
 	return &Repositories{
-		Nmap: postgres.NewNmapRepository(db),
+		Nmap:      postgres.NewNmapRepository(db),
+		Dashboard: postgres.NewDashboardRepository(db),
 	}, nil
 }
