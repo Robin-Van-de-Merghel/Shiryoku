@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config"
 	shiryoku_db "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db"
@@ -23,7 +24,7 @@ func main() {
 	// Create OpenSearch client
 	repos, err := shiryoku_db.InitDB(dsn)
 	if err != nil {
-		panic(err)
+		log.Fatalf("couldn't initialize DB connection: %v", err)
 	}
 
 	// Get the modules and widgets
@@ -34,13 +35,12 @@ func main() {
 	// Pass to router
 	router := shiryoku_routers.GetFilledRouter(*serverConfig, repos)
 
-	// FIXME: port from config
 	err = router.Run(
 		fmt.Sprintf(":%d", serverConfig.Port),
 	)
 
 	if err != nil {
 		// Rather kill instantly
-		panic(err)
+		log.Fatalf("an error occurred with the server: %v", err)
 	}
 }

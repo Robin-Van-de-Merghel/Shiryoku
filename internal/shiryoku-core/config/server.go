@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 
-	config_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
 	"github.com/gin-gonic/gin"
 )
 
@@ -83,14 +83,14 @@ func NewServerConfig() *ServerConfig {
 	}
 
 	return &ServerConfig{
-		Port:     config_common.GetEnvUint16("PORT", 8080),
+		Port:     common.GetEnvUint16("PORT", 8080),
 		LogLevel: logLevel,
 		DBConfig: DBConfig{
-			Host:     config_common.GetEnv("DB_HOST", "localhost"),
-			Port:     config_common.GetEnvUint16("DB_PORT", 5432),
-			Username: config_common.GetEnv("DB_USERNAME", "shiryoku"),
-			Password: config_common.GetEnv("DB_PASSWORD", "shiryoku"),
-			Database: config_common.GetEnv("DB_NAME", "shiryoku"),
+			Host:     common.GetEnv("DB_HOST", "localhost"),
+			Port:     common.GetEnvUint16("DB_PORT", 5432),
+			Username: common.GetEnv("DB_USERNAME", "shiryoku"),
+			Password: common.GetEnv("DB_PASSWORD", "shiryoku"),
+			Database: common.GetEnv("DB_NAME", "shiryoku"),
 		},
 		Modules: []APIModule{},
 		Widgets: []APIModule{},

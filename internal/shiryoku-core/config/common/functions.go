@@ -1,4 +1,4 @@
-package config_common
+package common
 
 import (
 	"context"
@@ -23,4 +23,6 @@ func GetEnvUint16(key string, defaultVal uint16) uint16 {
 	return defaultVal
 }
 
+// Checker is a function that we can give to the api endpoint
+// If it returns false or an error, the server will be set as "down"
 type Checker func(ctx context.Context) (bool, error)

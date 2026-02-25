@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config"
-	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db"
-	logic_widgets_dashboard "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/widgets/dashboard"
+	shiryoku_db "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/widgets/dashboard"
 )
 
 // NmapWorker refreshes the dashboard materialized view with latest nmap scans
@@ -77,7 +77,7 @@ func (w *NmapWorker) refreshView(ctx context.Context) {
 	start := time.Now()
 	log.Printf("[%s] Refreshing dashboard table", w.config.Name)
 
-	if err := logic_widgets_dashboard.BuildDashboardScans(ctx, w.repos.Nmap, w.repos.Dashboard, 7); err != nil {
+	if err := dashboard.BuildDashboardScans(ctx, w.repos.Nmap, w.repos.Dashboard, 7); err != nil {
 		log.Printf("[%s] Error rebuilding dashboard: %v", w.config.Name, err)
 		return
 	}

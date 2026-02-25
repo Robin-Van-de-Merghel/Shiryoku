@@ -1,4 +1,4 @@
-package logic_nmap
+package nmap
 
 import (
 	"time"

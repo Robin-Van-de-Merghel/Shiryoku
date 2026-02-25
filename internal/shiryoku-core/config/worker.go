@@ -1,11 +1,12 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"time"
 
-	config_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
 )
 
 // WorkerConfig contains configuration for background workers
@@ -21,13 +22,17 @@ type WorkerConfig struct {
 }
 
 // NewWorkerConfig creates a worker config with defaults from environment variables
-func NewWorkerConfig() *WorkerConfig {
+func NewWorkerConfig() (*WorkerConfig, error) {
 	// Default frequency: 300 seconds (5 minutes)
 	frequency := 300
 	if freqStr := os.Getenv("VIEW_WORK_FREQUENCY"); freqStr != "" {
 		if f, err := strconv.Atoi(freqStr); err == nil {
 			frequency = f
 		}
+	}
+
+	if frequency <= 0 {
+		return nil, fmt.Errorf("freqStr must be positive")
 	}
 
 	// Default log level: DEBUG
@@ -44,13 +49,13 @@ func NewWorkerConfig() *WorkerConfig {
 	return &WorkerConfig{
 		Name: "nmap-dashboard-worker",
 		DBConfig: DBConfig{
-			Host:     config_common.GetEnv("DB_HOST", "localhost"),
-			Port:     config_common.GetEnvUint16("DB_PORT", 5432),
-			Username: config_common.GetEnv("DB_USERNAME", "shiryoku"),
-			Password: config_common.GetEnv("DB_PASSWORD", "shiryoku"),
-			Database: config_common.GetEnv("DB_NAME", "shiryoku"),
+			Host:     common.GetEnv("DB_HOST", "localhost"),
+			Port:     common.GetEnvUint16("DB_PORT", 5432),
+			Username: common.GetEnv("DB_USERNAME", "shiryoku"),
+			Password: common.GetEnv("DB_PASSWORD", "shiryoku"),
+			Database: common.GetEnv("DB_NAME", "shiryoku"),
 		},
 		Frequency: time.Duration(frequency) * time.Second,
 		LogLevel:  LogLevelT(logLevel),
-	}
+	}, nil
 }

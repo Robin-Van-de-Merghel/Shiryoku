@@ -1,4 +1,4 @@
-package routers_modules_nmap
+package nmap
 
 import (
 	"bytes"
@@ -142,7 +142,8 @@ func TestSearchNmapScansSuccess(t *testing.T) {
 }
 
 func TestSearchNmapScansValidationErrors(t *testing.T) {
-	router := setupRouter()
+	mockRepo := &postgres_testing.MockNmapRepository{}
+	router := setupRouter(mockRepo)
 
 	tests := []struct {
 		name           string
@@ -210,7 +211,8 @@ func TestSearchNmapScansValidationErrors(t *testing.T) {
 }
 
 func TestSearchNmapScansEdgeCases(t *testing.T) {
-	router := setupRouter()
+	mockRepo := &postgres_testing.MockNmapRepository{}
+	router := setupRouter(mockRepo)
 
 	tests := []struct {
 		name           string

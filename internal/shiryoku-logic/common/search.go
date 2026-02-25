@@ -1,4 +1,4 @@
-package logic_common
+package common
 
 import (
 	"context"
