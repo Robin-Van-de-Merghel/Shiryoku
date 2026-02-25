@@ -6,18 +6,32 @@ This layer interacts directly with the database*s*.
 
 Multiple kinds of database can be used: OpenSearch/ElastricSearch, MySQL, etc. The idea is to provide an interface for the other layers.
 
+> [!NOTE]
+> We will mostly use Postgres databases.
+
 It is better if we can use a similar interface between all engines, as it will make it simpler to work with.
 
-### Nmap DB
+To do that, we will use `SearchParams` (taken from [diracx](https://github.com/DIRACGrid/diracx/blob/main/diracx-core/src/diracx/core/models/search.py)). It provides a quite solid interface to the user as well as developper to build complex requests. For example:
+
+```json
+{
+    "search": [
+        {
+            "parameter": "host",
+            "operator": "eq",
+            "value": "1.1.1.1"
+        }
+    ]
+}
+```
+
+## Nmap storage
+
+Nmap storage is divided in two parts: main storage, and the dashboard's. The first one is the result of every nmap scans, and the other one is dedicated to displaying scans on a dashboard (views calculated from the whole data).
 
 ```mermaid
 classDiagram
-    %% A scan discovered services
-    %% NmapScan --> ScanResult
-    %% ScanResult --> Service
-    %% ScanResult --> NmapHost
-    %% ScanResult --> NmapScriptResult
-
+    %% Main entities
     class NmapScan{
         +UUID ScanID
         +time ScanStart
@@ -26,9 +40,6 @@ classDiagram
         +time CreatedAt
     }
     
-    %% A host discovered during scans
-    %% Unicity : Host (IP address, or first address if multiple)
-    %% Can appear in multiple scans
     class NmapHost {
         +UUID HostID
         +string Host
@@ -40,10 +51,7 @@ classDiagram
         +string Comment
         +time CreatedAt
     }
-    
-    %% Usable by other scripts than nmap (nuclei, etc.)
-    %% Unicity : (ServiceName + Product + Version + ServiceExtraInfo + Protocol + ServiceTunnel)
-    %% Or else reuse existing one
+
     class Service {
         +UUID ServiceID
         +string ServiceName
@@ -55,10 +63,6 @@ classDiagram
         +time CreatedAt
     }
 
-    %% A scan discovered "ScanResult"s
-    %% One result = port + scan + host + service
-    %% Composite key: (ScanID, HostID, ServiceID, Port)
-    %% Represents: In this scan, this host had this service on this port
     class ScanResult {
         +UUID ScanResultID
         +UUID ScanID
@@ -69,8 +73,6 @@ classDiagram
         +time CreatedAt
     }
     
-    %% NSE script results for a specific scan result
-    %% (+ ScriptResults)
     class NmapScriptResult {
         +UUID NmapScriptResultID
         +UUID ScanResultID
@@ -79,8 +81,22 @@ classDiagram
         +time CreatedAt
     }
 
+    %% Dashboard-specific view
+    class WidgetDashboardScan {
+        +string ScanID
+        +string HostID
+        +time ScanStart
+        +string Host
+        +int PortNumber
+        +[]int Ports
+        +[]string HostNames
+    }
+
+    %% Relationships
     NmapScan "1" --> "*" ScanResult: has
     NmapHost "1" --> "*" ScanResult: appears_in
     Service "1" --> "*" ScanResult: referenced_by
     ScanResult "1" --> "*" NmapScriptResult: has
+    ScanResult "*" --> "*" WidgetDashboardScan: being_used_by
+    NmapHost "*" --> "*" WidgetDashboardScan: being_used_by
 ```
