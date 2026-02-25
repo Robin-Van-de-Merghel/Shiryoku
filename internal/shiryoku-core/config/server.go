@@ -1,13 +1,16 @@
 package config
 
 import (
+	"os"
+
+	config_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
 	"github.com/gin-gonic/gin"
 )
 
 type LogLevelT uint8
 
 const (
-	LOG_LEVEL_DEBUG = iota
+	LOG_LEVEL_DEBUG LogLevelT = iota
 	LOG_LEVEL_INFO
 	LOG_LEVEL_ERROR
 )
@@ -18,8 +21,10 @@ func (ll LogLevelT) IsValid() bool {
 
 // DB Config for a single DB (SQL, opensearch)
 type DBConfig struct {
-	// IP/domain/port
+	// IP/domain
 	Host string
+
+	// Port number
 	Port uint16
 
 	// Creds
@@ -64,16 +69,28 @@ type ServerConfig struct {
 	Widgets []APIModule
 }
 
+// NewServerConfig creates a ServerConfig instance using environment variables.
 func NewServerConfig() *ServerConfig {
+	// Default log level: DEBUG
+	logLevel := LOG_LEVEL_DEBUG
+	if levelStr := os.Getenv("LOG_LEVEL"); levelStr != "" {
+		switch levelStr {
+		case "info":
+			logLevel = LOG_LEVEL_INFO
+		case "error":
+			logLevel = LOG_LEVEL_ERROR
+		}
+	}
+
 	return &ServerConfig{
-		Port:     8080,
-		LogLevel: LOG_LEVEL_DEBUG,
+		Port:     config_common.GetEnvUint16("PORT", 8080),
+		LogLevel: logLevel,
 		DBConfig: DBConfig{
-			Host:     "localhost",
-			Port:     5432,
-			Database: "shiryoku",
-			Username: "shiryoku",
-			Password: "shiryoku",
+			Host:     config_common.GetEnv("DB_HOST", "localhost"),
+			Port:     config_common.GetEnvUint16("DB_PORT", 5432),
+			Username: config_common.GetEnv("DB_USERNAME", "shiryoku"),
+			Password: config_common.GetEnv("DB_PASSWORD", "shiryoku"),
+			Database: config_common.GetEnv("DB_NAME", "shiryoku"),
 		},
 		Modules: []APIModule{},
 		Widgets: []APIModule{},

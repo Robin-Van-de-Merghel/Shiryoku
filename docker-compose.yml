@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: shiryoku-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: shiryoku
+      POSTGRES_PASSWORD: shiryoku
+      POSTGRES_DB: shiryoku
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shiryoku"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  shiryoku-api:
+    build:
+      context: .
+      dockerfile: ./cmd/shiryoku-api/Dockerfile
+    container_name: shiryoku-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      LOG_LEVEL: info
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: shiryoku
+      DB_PASSWORD: shiryoku
+      DB_NAME: shiryoku
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://shiryoku-api:8080/ping"]
+      interval: 5s
+      retries: 10
+      start_period: 5s
+
+  shiryoku-worker:
+    build:
+      context: .
+      dockerfile: ./cmd/shiryoku-worker/Dockerfile
+    container_name: shiryoku-worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      shiryoku-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: info
+      VIEW_WORK_FREQUENCY: 10
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: shiryoku
+      DB_PASSWORD: shiryoku
+      DB_NAME: shiryoku
+
+volumes:
+  postgres_data:

@@ -2,12 +2,13 @@ package shiryoku_routers
 
 import (
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config"
+	shiryoku_db "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/status"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
 	"github.com/gin-gonic/gin"
 )
 
-func GetFilledRouter(serverConfig config.ServerConfig) *gin.Engine {
+func GetFilledRouter(serverConfig config.ServerConfig, repos *shiryoku_db.Repositories) *gin.Engine {
 
 	// Main router
 	router := gin.Default()
@@ -16,7 +17,9 @@ func GetFilledRouter(serverConfig config.ServerConfig) *gin.Engine {
 	router.Use(utils.ErrorRecoveryMiddleware())
 
 	// For docker-compose status
-	router.GET("/ping", status.Ping)
+		router.GET("/ping", status.Ping(
+			repos.Dashboard.ReadyCheck(),
+		))
 
 	// API generic group
 	api_group := router.Group("/api")

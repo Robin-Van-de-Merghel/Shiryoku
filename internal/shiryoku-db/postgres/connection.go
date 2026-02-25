@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
+	models_widgets "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -26,6 +27,7 @@ func NewDB(dsn string) (*gorm.DB, error) {
 		&models.Service{},
 		&models.ScanResult{},
 		&models.NmapScriptResult{},
+		&models_widgets.WidgetDashboardScan{},
 	); err != nil {
 		return nil, fmt.Errorf("failed to migrate schema: %w", err)
 	}
@@ -47,30 +49,20 @@ func NewDB(dsn string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to create scan result unique index: %w", err)
 	}
 
-	// Create materialized view for dashboard (scan + host + aggregated ports)
+	// Create composite unique index for dashboard table (ScanID + HostID)
 	if err := db.Exec(`
-		CREATE MATERIALIZED VIEW IF NOT EXISTS dashboard_scans AS
-		SELECT 
-			s.scan_id,
-			h.host_id,
-			s.scan_start,
-			h.host,
-			h.hostnames,
-			array_agg(sr.port ORDER BY sr.port) AS ports
-		FROM scans s
-		JOIN scan_results sr ON s.scan_id = sr.scan_id
-		JOIN hosts h ON sr.host_id = h.host_id
-		GROUP BY s.scan_id, h.host_id, s.scan_start, h.host, h.hostnames
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_dashboard_scans_unique
+		ON widget_dashboard_scans(scan_id, host_id)
 	`).Error; err != nil {
-		return nil, fmt.Errorf("failed to create dashboard_scans view: %w", err)
+		return nil, fmt.Errorf("failed to create dashboard unique index: %w", err)
 	}
 
-	// Create index on materialized view for fast queries
+	// Optional: index on scan_start for fast queries
 	if err := db.Exec(`
 		CREATE INDEX IF NOT EXISTS idx_dashboard_scans_scan_start 
-		ON dashboard_scans(scan_start DESC)
+		ON widget_dashboard_scans(scan_start DESC)
 	`).Error; err != nil {
-		return nil, fmt.Errorf("failed to create dashboard view index: %w", err)
+		return nil, fmt.Errorf("failed to create dashboard scan_start index: %w", err)
 	}
 
 	return db, nil

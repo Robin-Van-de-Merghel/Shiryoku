@@ -18,7 +18,7 @@ func Search[T any](repo postgres.SearchableRepository[T]) gin.HandlerFunc {
 
 		params.SetDefaults()
 
-		result, err := logic_common.Search(c.Request.Context(), repo, &params)
+		result, err := logic_common.Search[T](c.Request.Context(), repo, &params)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
