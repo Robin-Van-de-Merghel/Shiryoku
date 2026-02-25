@@ -2,45 +2,42 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config"
-	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+	shiryoku_db "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db"
 	shiryoku_routers "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers"
-	"github.com/opensearch-project/opensearch-go"
 )
 
 func main() {
 	serverConfig := config.NewServerConfig()
 
-	// Use struct field instead of map?
-	osdbConfig := serverConfig.DBConfigs["OSDB"]
+	// URL to the db
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
+		serverConfig.DBConfig.Username,
+		serverConfig.DBConfig.Password,
+		serverConfig.DBConfig.Host,
+		serverConfig.DBConfig.Port,
+		serverConfig.DBConfig.Database,
+	)
 
 	// Create OpenSearch client
-	osClient, err := opensearch.NewClient(opensearch.Config{
-		Addresses: []string{
-			// TODO: Use password and schema
-			fmt.Sprintf("http://%s:%d", osdbConfig.Host, osdbConfig.Port),
-		},
-	})
+	repos, err := shiryoku_db.InitDB(dsn)
 	if err != nil {
-		log.Fatalf("Failed to create OpenSearch client: %v", err)
+		panic(err)
 	}
 
-	// Wrap in NmapDB
-	osdbClient := osdb.NewOpenSearchClient(osClient)
-
-
 	// Get the modules and widgets
-	serverConfig.Modules = config.GetDefaultModules(*osdbClient)
-	serverConfig.Widgets = config.GetDefaultWidgets(*osdbClient)
+	serverConfig.Modules = config.GetDefaultModules(repos)
+	serverConfig.Widgets = config.GetDefaultWidgets(repos)
 	// TODO: Import external ones
 
 	// Pass to router
 	router := shiryoku_routers.GetFilledRouter(*serverConfig)
 
 	// FIXME: port from config
-	err = router.Run(":8080")
+	err = router.Run(
+		fmt.Sprintf(":%d", serverConfig.Port),
+	)
 
 	if err != nil {
 		// Rather kill instantly

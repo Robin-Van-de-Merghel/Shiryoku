@@ -4,7 +4,7 @@ import (
 	"time"
 
 	models_widgets "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
-	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/postgres"
 	logic_widgets_dashboard "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/widgets/dashboard"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
 	"github.com/gin-gonic/gin"
@@ -13,7 +13,7 @@ import (
 
 var dashboardCache = cache.New(5*time.Minute, 10*time.Minute)
 
-func GetDashboardData(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
+func GetDashboardData(nmapRepo postgres.NmapRepository) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		const cacheKey = "dashboard_data"
 
@@ -38,7 +38,7 @@ func GetDashboardData(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
 
 		results, err := logic_widgets_dashboard.GetLatestWidgetScans(
 			c.Request.Context(),
-			nmapDB,
+			nmapRepo,
 			params,
 		)
 		if err != nil {

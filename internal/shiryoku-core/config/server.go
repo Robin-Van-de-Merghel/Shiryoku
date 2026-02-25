@@ -1,7 +1,6 @@
 package config
 
 import (
-	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,6 +25,9 @@ type DBConfig struct {
 	// Creds
 	Username string
 	Password string
+
+	// Database name
+	Database string
 }
 
 // Modules to add modularity
@@ -39,13 +41,9 @@ type APIModule struct {
 	// URL path, e.g. /nmap
 	Path string
 
-	// DB instance
-	// FIXME: Use generic?
-	OSDB osdb.OpenSearchClient
-
 	// Callback to setup the API routes
 	// It needs a subgroup. This subgroup separates the endpoints for each module.
-	SetupModuleRoutes func(*gin.RouterGroup, osdb.OpenSearchClient, string)
+	SetupModuleRoutes func(*gin.RouterGroup)
 }
 
 // Server config, contains everything that can be modified
@@ -56,9 +54,8 @@ type ServerConfig struct {
 	// Logs
 	LogLevel LogLevelT
 
-	// Databases
-	// [DBName] -> [Config]
-	DBConfigs map[string]DBConfig
+	// Database (one SQL)
+	DBConfig DBConfig
 
 	// Modules are generic exposed API
 	Modules []APIModule
@@ -69,16 +66,16 @@ type ServerConfig struct {
 
 func NewServerConfig() *ServerConfig {
 	return &ServerConfig{
-		Port: 8080,
+		Port:     8080,
 		LogLevel: LOG_LEVEL_DEBUG,
-		DBConfigs: map[string]DBConfig{
-			"OSDB": {
-				Host: "localhost",
-				Port: 9200,
-			},
+		DBConfig: DBConfig{
+			Host:     "localhost",
+			Port:     5432,
+			Database: "shiryoku",
+			Username: "shiryoku",
+			Password: "shiryoku",
 		},
 		Modules: []APIModule{},
 		Widgets: []APIModule{},
 	}
 }
-

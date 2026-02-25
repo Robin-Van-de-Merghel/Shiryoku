@@ -30,7 +30,7 @@ func GetFilledRouter(serverConfig config.ServerConfig) *gin.Engine {
 			current_group := modules_group.Group(module.Path)
 
 			// Import all routes
-			module.SetupModuleRoutes(current_group, module.OSDB, module.Path)
+			module.SetupModuleRoutes(current_group)
 		}
 	}
 
@@ -43,7 +43,7 @@ func GetFilledRouter(serverConfig config.ServerConfig) *gin.Engine {
 			current_group := dashboard_group.Group(module.Path)
 
 			// Import all routes
-			module.SetupModuleRoutes(current_group, module.OSDB, module.Path)
+			module.SetupModuleRoutes(current_group)
 		}
 	}
 

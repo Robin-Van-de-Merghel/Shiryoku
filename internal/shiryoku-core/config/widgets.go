@@ -1,19 +1,21 @@
 package config
 
 import (
-	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+	shiryoku_db "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db"
 	routers_utils_setup "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils/setup"
+	"github.com/gin-gonic/gin"
 )
 
-func GetDefaultWidgets(client osdb.OpenSearchClient) []APIModule {
+// GetDefaultWidgets returns the default UI widgets with configured routes
+func GetDefaultWidgets(repos *shiryoku_db.Repositories) []APIModule {
 	return []APIModule{
 		{
-			Name: "Dashboard",
+			Name:        "Dashboard",
 			Description: "Dashboard shown on the first page",
-			Path: "/dashboard",
-			OSDB: client,
-			SetupModuleRoutes: routers_utils_setup.SetupWidgetsDashboardRoutes,
+			Path:        "/dashboard",
+			SetupModuleRoutes: func(group *gin.RouterGroup) {
+				routers_utils_setup.SetupWidgetsDashboardRoutes(group, repos)
+			},
 		},
 	}
 }
-
