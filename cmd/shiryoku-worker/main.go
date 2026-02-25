@@ -13,7 +13,10 @@ import (
 
 func main() {
 	// Load worker config from environment
-	workerConfig := config.NewWorkerConfig()
+	workerConfig, err := config.NewWorkerConfig()
+	if err != nil {
+		log.Fatalf("Error getting the config: %v", err)
+	}
 
 	log.Printf("Starting %s", workerConfig.Name)
 	log.Printf("Refresh frequency: %v", workerConfig.Frequency)

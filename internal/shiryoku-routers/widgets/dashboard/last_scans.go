@@ -1,9 +1,9 @@
-package routers_widgets_dashboard
+package dashboard
 
 import (
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/postgres"
-	logic_widgets_dashboard "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/widgets/dashboard"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/widgets/dashboard"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +25,7 @@ func GetDashboardData(dashboardRepo postgres.DashboardRepository) func(c *gin.Co
 
 		params.SetDefaults()
 
-		results, err := logic_widgets_dashboard.GetLatestWidgetScans(
+		results, err := dashboard.GetLatestWidgetScans(
 			c.Request.Context(),
 			dashboardRepo,
 			&params,

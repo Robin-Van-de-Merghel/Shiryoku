@@ -1,4 +1,4 @@
-package routers_utils_setup
+package setup
 
 import (
 	shiryoku_db "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db"

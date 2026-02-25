@@ -1,4 +1,4 @@
-package models_widgets
+package widgets
 
 import (
 	"time"

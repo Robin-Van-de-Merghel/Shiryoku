@@ -1,13 +1,13 @@
-package logic_widgets_dashboard
+package dashboard
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
-	models_widgets "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/postgres"
-	logic_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/common"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/common"
 )
 
 // GetLatestWidgetScans fetches the latest scans with host and port info from dashboard table
@@ -15,7 +15,7 @@ func GetLatestWidgetScans(
 	ctx context.Context,
 	dashboardRepo postgres.DashboardRepository,
 	input *models.SearchParams,
-) (*logic_common.SearchResult[models_widgets.WidgetDashboardScan], error) {
+) (*common.SearchResult[widgets.WidgetDashboardScan], error) {
 	input.SetDefaults()
 
 	total, results, err := dashboardRepo.GetDashboardScans(ctx, input)
@@ -23,7 +23,7 @@ func GetLatestWidgetScans(
 		return nil, fmt.Errorf("failed to fetch latest scans: %w", err)
 	}
 
-	return &logic_common.SearchResult[models_widgets.WidgetDashboardScan]{
+	return &common.SearchResult[widgets.WidgetDashboardScan]{
 		Total:   total,
 		Results: results,
 	}, nil
@@ -45,7 +45,7 @@ func BuildDashboardScans(
 		return err
 	}
 
-	dashboardRows := make([]models_widgets.WidgetDashboardScan, 0, len(scans))
+	dashboardRows := make([]widgets.WidgetDashboardScan, 0, len(scans))
 
 	for _, scan := range scans {
 		hosts, err := nmapRepo.GetHosts(ctx, scan.ScanID.String())
@@ -65,7 +65,7 @@ func BuildDashboardScans(
 				ports = append(ports, int(r.Port))
 			}
 
-			row := models_widgets.WidgetDashboardScan{
+			row := widgets.WidgetDashboardScan{
 				ScanID:     scan.ScanID.String(),
 				HostID:     host.HostID.String(),
 				ScanStart:  scan.ScanStart,

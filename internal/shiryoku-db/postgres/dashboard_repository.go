@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	config_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
-	models_widgets "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +21,7 @@ func NewDashboardRepository(db *gorm.DB) DashboardRepository {
 	return &DashboardRepositoryImpl{db: db}
 }
 
-func (d *DashboardRepositoryImpl) ReadyCheck() config_common.Checker {
+func (d *DashboardRepositoryImpl) ReadyCheck() common.Checker {
 	return func(ctx context.Context) (bool, error) {
 		var exists bool
 		if err := d.db.Raw(`
@@ -39,16 +39,14 @@ func (d *DashboardRepositoryImpl) ReadyCheck() config_common.Checker {
 }
 
 // GetDashboardScans retrieves paginated scan-host combinations from materialized view
-func (d *DashboardRepositoryImpl) GetDashboardScans(ctx context.Context, params *models.SearchParams) (uint64, []models_widgets.WidgetDashboardScan, error) {
-	var results []models_widgets.WidgetDashboardScan
-
-	params.SetDefaults()
+func (d *DashboardRepositoryImpl) GetDashboardScans(ctx context.Context, params *models.SearchParams) (uint64, []widgets.WidgetDashboardScan, error) {
+	var results []widgets.WidgetDashboardScan
 
 	// Query the materialized view directly
 	query := d.db.WithContext(ctx)
 
 	var total int64
-	if err := query.Model(&models_widgets.WidgetDashboardScan{}).Count(&total).Error; err != nil {
+	if err := query.Model(&widgets.WidgetDashboardScan{}).Count(&total).Error; err != nil {
 		return 0, nil, fmt.Errorf("failed to count dashboard scans: %w", err)
 	}
 
@@ -86,7 +84,7 @@ func (d *DashboardRepositoryImpl) RefreshMaterializedView(ctx context.Context) e
 }
 
 // CreateDashboardScans inserts multiple dashboard rows in batch
-func (d *DashboardRepositoryImpl) CreateDashboardScans(ctx context.Context, rows []models_widgets.WidgetDashboardScan) error {
+func (d *DashboardRepositoryImpl) CreateDashboardScans(ctx context.Context, rows []widgets.WidgetDashboardScan) error {
 	if len(rows) == 0 {
 		return nil
 	}

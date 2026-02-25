@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
-	models_widgets "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -27,7 +27,7 @@ func NewDB(dsn string) (*gorm.DB, error) {
 		&models.Service{},
 		&models.ScanResult{},
 		&models.NmapScriptResult{},
-		&models_widgets.WidgetDashboardScan{},
+		&widgets.WidgetDashboardScan{},
 	); err != nil {
 		return nil, fmt.Errorf("failed to migrate schema: %w", err)
 	}
