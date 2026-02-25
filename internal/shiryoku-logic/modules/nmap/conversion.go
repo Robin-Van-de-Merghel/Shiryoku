@@ -80,11 +80,11 @@ func convertHostPortsToModels(h *nmap.Host, hostID uuid.UUID, scanID uuid.UUID, 
 
 		// Create scan result
 		scanResult := models.ScanResult{
-			ScanID:      scanID,
-			HostID:      hostID,
-			ServiceID:   servicePtr.ServiceID, // Will be set after DB insert
-			Port:        port.ID,
-			PortState:   string(port.Status()),
+			ScanID:    scanID,
+			HostID:    hostID,
+			ServiceID: servicePtr.ServiceID, // Will be set after DB insert
+			Port:      port.ID,
+			PortState: string(port.Status()),
 		}
 
 		scanResults = append(scanResults, scanResult)

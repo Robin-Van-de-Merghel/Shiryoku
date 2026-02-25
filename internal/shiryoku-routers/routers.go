@@ -17,9 +17,9 @@ func GetFilledRouter(serverConfig config.ServerConfig, repos *shiryoku_db.Reposi
 	router.Use(utils.ErrorRecoveryMiddleware())
 
 	// For docker-compose status
-		router.GET("/ping", status.Ping(
-			repos.Dashboard.ReadyCheck(),
-		))
+	router.GET("/ping", status.Ping(
+		repos.Dashboard.ReadyCheck(),
+	))
 
 	// API generic group
 	api_group := router.Group("/api")

@@ -10,32 +10,32 @@ import (
 // WidgetDashboardScan represents a single scan-host combination with discovered ports
 // Maps to the table: widget_dashboard_scans
 type WidgetDashboardScan struct {
-	ScanID    string         `gorm:"column:scan_id;primaryKey" json:"scan_id"`
-	HostID    string         `gorm:"column:host_id;primaryKey" json:"host_id"`
-	ScanStart time.Time      `gorm:"column:scan_start" json:"scan_start"`
-	Host      string         `gorm:"column:host" json:"host"`
-	PortNumber int `gorm:"column:port_number;type:integer" json:"-"`
+	ScanID     string    `gorm:"column:scan_id;primaryKey" json:"scan_id"`
+	HostID     string    `gorm:"column:host_id;primaryKey" json:"host_id"`
+	ScanStart  time.Time `gorm:"column:scan_start" json:"scan_start"`
+	Host       string    `gorm:"column:host" json:"host"`
+	PortNumber int       `gorm:"column:port_number;type:integer" json:"-"`
 
 	// Stored in DB as pq.IntArray or pq.StringArray
-	PGPorts pq.Int64Array `gorm:"column:ports;type:integer[]" json:"-"`
+	PGPorts     pq.Int64Array  `gorm:"column:ports;type:integer[]" json:"-"`
 	PGHostnames pq.StringArray `gorm:"column:hostnames;type:text[]" json:"-"`
 
 	// Go-friendly helper slice, not persisted
-	Ports []int `gorm:"-" json:"ports,omitempty"`
-	HostNames []string       `gorm:"-" json:"hostnames,omitempty"`
+	Ports     []int    `gorm:"-" json:"ports,omitempty"`
+	HostNames []string `gorm:"-" json:"hostnames,omitempty"`
 }
 
 // Hooks for syncing
 func (w *WidgetDashboardScan) AfterFind(tx *gorm.DB) error {
-    w.Ports = make([]int, len(w.PGPorts))
-    for i, p := range w.PGPorts {
-			w.Ports[i] = int(p)
-    }
+	w.Ports = make([]int, len(w.PGPorts))
+	for i, p := range w.PGPorts {
+		w.Ports[i] = int(p)
+	}
 
-    w.HostNames = make([]string, len(w.PGHostnames))
-    copy(w.HostNames, w.PGHostnames)
+	w.HostNames = make([]string, len(w.PGHostnames))
+	copy(w.HostNames, w.PGHostnames)
 
-    return nil
+	return nil
 }
 
 func (w *WidgetDashboardScan) BeforeSave(tx *gorm.DB) error {

@@ -1,12 +1,12 @@
-package postgres 
+package postgres
 
 import (
 	"fmt"
 	"regexp"
 	"strings"
 
-	"gorm.io/gorm"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
+	"gorm.io/gorm"
 )
 
 type SearchBuilder[T any] struct {

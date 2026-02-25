@@ -7,11 +7,11 @@ import (
 )
 
 type MockNmapRepository struct {
-	SearchFn func(ctx context.Context, params *models.SearchParams) (uint64, []models.NmapScan, error)
-	GetScanFn func(ctx context.Context, scanID string) (*models.NmapScan, error)
-	GetHostsFn func(ctx context.Context, scanID string) ([]models.NmapHost, error)
-	GetPortsFn func(ctx context.Context, scanID, hostID string) ([]models.NmapPort, error)
-	InsertScanFn func(ctx context.Context, scan *models.NmapScan) error
+	SearchFn      func(ctx context.Context, params *models.SearchParams) (uint64, []models.NmapScan, error)
+	GetScanFn     func(ctx context.Context, scanID string) (*models.NmapScan, error)
+	GetHostsFn    func(ctx context.Context, scanID string) ([]models.NmapHost, error)
+	GetPortsFn    func(ctx context.Context, scanID, hostID string) ([]models.NmapPort, error)
+	InsertScanFn  func(ctx context.Context, scan *models.NmapScan) error
 	InsertHostsFn func(ctx context.Context, hosts []models.NmapHost) error
 	InsertPortsFn func(ctx context.Context, ports []models.NmapPort) error
 }

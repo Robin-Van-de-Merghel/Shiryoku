@@ -24,4 +24,3 @@ func Search[T any](ctx context.Context, repo postgres.SearchableRepository[T], p
 		Results: results,
 	}, nil
 }
-

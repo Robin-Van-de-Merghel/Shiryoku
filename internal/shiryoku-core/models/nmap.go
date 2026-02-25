@@ -84,11 +84,11 @@ func (Service) TableName() string {
 }
 
 type NmapScan struct {
-	ScanID      uuid.UUID `gorm:"type:uuid;primaryKey" json:"scan_id"`
+	ScanID uuid.UUID `gorm:"type:uuid;primaryKey" json:"scan_id"`
 	// epoch timestamp
-	ScanStart   time.Time `gorm:"index:idx_scan_start" json:"scan_start"`
+	ScanStart time.Time `gorm:"index:idx_scan_start" json:"scan_start"`
 	// command line args
-	ScanArgs    string    `gorm:"type:text" json:"scan_args,omitempty"`
+	ScanArgs string `gorm:"type:text" json:"scan_args,omitempty"`
 	// e.g. "7.94"
 	NmapVersion string    `gorm:"type:varchar(50)" json:"nmap_version,omitempty"`
 	CreatedAt   time.Time `gorm:"autoCreateTime" json:"-"`
@@ -105,12 +105,12 @@ func (NmapScan) TableName() string {
 // NmapHost is dedicated to storing host info
 // A host can appear in multiple scans
 type NmapHost struct {
-	HostID     uuid.UUID      `gorm:"type:uuid;primaryKey" json:"host_id"`
+	HostID uuid.UUID `gorm:"type:uuid;primaryKey" json:"host_id"`
 	// takes first address
-	Host       string         `gorm:"index:idx_host;type:varchar(255)" json:"host"`
-	Addresses  pq.StringArray `gorm:"type:text[]" json:"addresses,omitempty"`
+	Host      string         `gorm:"index:idx_host;type:varchar(255)" json:"host"`
+	Addresses pq.StringArray `gorm:"type:text[]" json:"addresses,omitempty"`
 	// DNS names
-	Hostnames  pq.StringArray `gorm:"type:text[]" json:"hostnames,omitempty"`
+	Hostnames pq.StringArray `gorm:"type:text[]" json:"hostnames,omitempty"`
 	// up / down
 	HostStatus string `gorm:"type:varchar(20)" json:"host_status,omitempty"`
 	OSName     string `gorm:"type:varchar(255)" json:"os_name,omitempty"`
@@ -141,7 +141,7 @@ type ScanResult struct {
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"-"`
 
 	// Relations - Service loaded manually, no GORM FK constraint
-	Scripts  []NmapScriptResult `gorm:"foreignKey:ScanResultID" json:"scripts,omitempty"`
+	Scripts []NmapScriptResult `gorm:"foreignKey:ScanResultID" json:"scripts,omitempty"`
 }
 
 func (ScanResult) TableName() string {

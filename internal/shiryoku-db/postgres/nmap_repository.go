@@ -96,7 +96,7 @@ func (n *NmapRepositoryImpl) GetOrCreateService(ctx context.Context, service *mo
 		Where("service_name = ? AND service_product = ? AND service_version = ? AND service_extra_info = ? AND protocol = ? AND service_tunnel = ?",
 			service.ServiceName, service.ServiceProduct, service.ServiceVersion, service.ServiceExtraInfo, service.Protocol, service.ServiceTunnel).
 		FirstOrCreate(result, service).Error
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get or create service: %w", err)
 	}

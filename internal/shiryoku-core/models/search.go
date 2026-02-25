@@ -96,7 +96,7 @@ type SearchParams struct {
 	Sort       []SortSpec   `json:"sort"`
 	Distinct   bool         `json:"distinct"`
 	Page       uint64       `json:"page"`
-	PerPage    uint64        `json:"per_page"`
+	PerPage    uint64       `json:"per_page"`
 }
 
 func (s *SearchParams) SetDefaults() {
