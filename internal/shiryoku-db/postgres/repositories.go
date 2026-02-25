@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 
+	config_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
 	models_widgets "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
 )
@@ -46,4 +47,16 @@ type NmapRepository interface {
 type DashboardRepository interface {
 	// GetDashboardScans retrieves paginated scan-host combinations from materialized view
 	GetDashboardScans(ctx context.Context, params *models.SearchParams) (uint64, []models_widgets.WidgetDashboardScan, error)
+
+	// RefreshMaterializedView refreshes the dashboard materialized view
+	RefreshMaterializedView(ctx context.Context) error
+
+	// TruncateDashboard removes everything
+	TruncateDashboard(ctx context.Context) error
+
+	// Inserts dashboard scans
+	CreateDashboardScans(ctx context.Context, rows []models_widgets.WidgetDashboardScan) error
+
+	// Check health
+	ReadyCheck() config_common.Checker
 }

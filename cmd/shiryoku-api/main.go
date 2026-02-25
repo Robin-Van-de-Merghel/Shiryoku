@@ -32,7 +32,7 @@ func main() {
 	// TODO: Import external ones
 
 	// Pass to router
-	router := shiryoku_routers.GetFilledRouter(*serverConfig)
+	router := shiryoku_routers.GetFilledRouter(*serverConfig, repos)
 
 	// FIXME: port from config
 	err = router.Run(

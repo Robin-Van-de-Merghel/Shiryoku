@@ -1,15 +1,29 @@
 package status
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
 
-// Check health status
-func Ping(c *gin.Context) {
+	config_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
+	"github.com/gin-gonic/gin"
+)
 
-	// FIXME: Later on, this will be used by docker-compose for health status.
-	//
-	// It will be required to verify that all connections are done before saying "pong"
+// Ping takes a list of checkers and returns a gin.HandlerFunc
+func Ping(checkers ...config_common.Checker) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		ctx := c.Request.Context()
 
-	c.JSON(200, gin.H{
-		"message": "pong",
-	})
+		for _, check := range checkers {
+			ok, err := check(ctx)
+			if err != nil || !ok {
+				c.JSON(http.StatusServiceUnavailable, gin.H{
+					"message": "not ready",
+				})
+				return
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	}
 }
