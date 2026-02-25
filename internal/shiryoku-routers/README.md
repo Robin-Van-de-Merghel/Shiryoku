@@ -10,6 +10,7 @@ The current architecture for the API is:
 2. `/api/config/*` to fetch the current config
 3. `/api/agents/*` for the agents to push/pull data, or administrators to get information about them
 4. `/api/modules/*` for module specific interactions
+5. `/api/widgets/*` for widgets specific interactions
 
 ## Users interactions
 
