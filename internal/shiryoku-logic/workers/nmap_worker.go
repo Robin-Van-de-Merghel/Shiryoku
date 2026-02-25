@@ -74,13 +74,13 @@ func (w *NmapWorker) Stop() {
 
 // refreshView fetches latest scans and refreshes the materialized view
 func (w *NmapWorker) refreshView(ctx context.Context) {
-    start := time.Now()
-    log.Printf("[%s] Refreshing dashboard table", w.config.Name)
+	start := time.Now()
+	log.Printf("[%s] Refreshing dashboard table", w.config.Name)
 
-    if err := logic_widgets_dashboard.BuildDashboardScans(ctx, w.repos.Nmap, w.repos.Dashboard, 7); err != nil {
-        log.Printf("[%s] Error rebuilding dashboard: %v", w.config.Name, err)
-        return
-    }
+	if err := logic_widgets_dashboard.BuildDashboardScans(ctx, w.repos.Nmap, w.repos.Dashboard, 7); err != nil {
+		log.Printf("[%s] Error rebuilding dashboard: %v", w.config.Name, err)
+		return
+	}
 
-    log.Printf("[%s] Dashboard table rebuilt in %v", w.config.Name, time.Since(start))
+	log.Printf("[%s] Dashboard table rebuilt in %v", w.config.Name, time.Since(start))
 }

@@ -66,12 +66,12 @@ func BuildDashboardScans(
 			}
 
 			row := models_widgets.WidgetDashboardScan{
-				ScanID:    scan.ScanID.String(),
-				HostID:    host.HostID.String(),
-				ScanStart: scan.ScanStart,
-				Host:      host.Host,
-				HostNames: host.Hostnames,
-				Ports:     ports,
+				ScanID:     scan.ScanID.String(),
+				HostID:     host.HostID.String(),
+				ScanStart:  scan.ScanStart,
+				Host:       host.Host,
+				HostNames:  host.Hostnames,
+				Ports:      ports,
 				PortNumber: len(ports),
 			}
 
