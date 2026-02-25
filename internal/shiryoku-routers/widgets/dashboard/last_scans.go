@@ -13,7 +13,7 @@ import (
 
 var dashboardCache = cache.New(5*time.Minute, 10*time.Minute)
 
-func GetDashboardData(nmapRepo postgres.NmapRepository) func(c *gin.Context) {
+func GetDashboardData(dashboardRepo postgres.DashboardRepository) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		const cacheKey = "dashboard_data"
 
@@ -38,7 +38,7 @@ func GetDashboardData(nmapRepo postgres.NmapRepository) func(c *gin.Context) {
 
 		results, err := logic_widgets_dashboard.GetLatestWidgetScans(
 			c.Request.Context(),
-			nmapRepo,
+			dashboardRepo,
 			params,
 		)
 		if err != nil {

@@ -8,5 +8,5 @@ import (
 
 // SetupWidgetsDashboardRoutes registers all dashboard widget routes
 func SetupWidgetsDashboardRoutes(dashboard_group *gin.RouterGroup, repos *shiryoku_db.Repositories) {
-	dashboard_group.POST("/search", routers_widgets_dashboard.GetDashboardData(repos.Nmap))
+	dashboard_group.POST("/search", routers_widgets_dashboard.GetDashboardData(repos.Dashboard))
 }

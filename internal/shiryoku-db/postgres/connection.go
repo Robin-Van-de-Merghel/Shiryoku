@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
 	"gorm.io/driver/postgres"
@@ -40,25 +39,38 @@ func NewDB(dsn string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to create service signature index: %w", err)
 	}
 
-	// Add foreign key constraint from ScanResult to Service (if not already exists)
-	if err := db.Exec(`
-		ALTER TABLE scan_results
-		ADD CONSTRAINT fk_scan_results_service_id
-		FOREIGN KEY (service_id) REFERENCES services(service_id)
-		ON DELETE RESTRICT ON UPDATE CASCADE
-	`).Error; err != nil {
-		// Ignore if constraint already exists
-		if !strings.Contains(err.Error(), "already exists") && !strings.Contains(err.Error(), "duplicate key") {
-			return nil, fmt.Errorf("failed to create service FK: %w", err)
-		}
-	}
-
 	// Create composite unique index on ScanResult (ScanID + HostID + ServiceID + Port)
 	if err := db.Exec(`
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_scan_result_unique 
 		ON scan_results(scan_id, host_id, service_id, port)
 	`).Error; err != nil {
 		return nil, fmt.Errorf("failed to create scan result unique index: %w", err)
+	}
+
+	// Create materialized view for dashboard (scan + host + aggregated ports)
+	if err := db.Exec(`
+		CREATE MATERIALIZED VIEW IF NOT EXISTS dashboard_scans AS
+		SELECT 
+			s.scan_id,
+			h.host_id,
+			s.scan_start,
+			h.host,
+			h.hostnames,
+			array_agg(sr.port ORDER BY sr.port) AS ports
+		FROM scans s
+		JOIN scan_results sr ON s.scan_id = sr.scan_id
+		JOIN hosts h ON sr.host_id = h.host_id
+		GROUP BY s.scan_id, h.host_id, s.scan_start, h.host, h.hostnames
+	`).Error; err != nil {
+		return nil, fmt.Errorf("failed to create dashboard_scans view: %w", err)
+	}
+
+	// Create index on materialized view for fast queries
+	if err := db.Exec(`
+		CREATE INDEX IF NOT EXISTS idx_dashboard_scans_scan_start 
+		ON dashboard_scans(scan_start DESC)
+	`).Error; err != nil {
+		return nil, fmt.Errorf("failed to create dashboard view index: %w", err)
 	}
 
 	return db, nil
