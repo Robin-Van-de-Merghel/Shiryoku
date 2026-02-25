@@ -14,7 +14,7 @@ type WidgetDashboardScan struct {
 	HostID     string    `gorm:"column:host_id;primaryKey" json:"host_id"`
 	ScanStart  time.Time `gorm:"column:scan_start" json:"scan_start"`
 	Host       string    `gorm:"column:host" json:"host"`
-	PortNumber int       `gorm:"column:port_number;type:integer" json:"-"`
+	PortNumber int       `gorm:"column:port_number;type:integer" json:"port_number"`
 
 	// Stored in DB as pq.IntArray or pq.StringArray
 	PGPorts     pq.Int64Array  `gorm:"column:ports;type:integer[]" json:"-"`

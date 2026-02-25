@@ -19,37 +19,12 @@ func NewNmapRepository(db *gorm.DB) NmapRepository {
 }
 
 func (n *NmapRepositoryImpl) Search(ctx context.Context, params *models.SearchParams) (uint64, []models.NmapScan, error) {
-	var results []models.NmapScan
-
-	params.SetDefaults()
-
-	builder := NewSearchBuilder[models.NmapScan](n.db.WithContext(ctx))
-	query, err := builder.Build(params)
-	if err != nil {
-		return 0, nil, err
-	}
-
-	var total int64
-	if err := query.Model(&models.NmapScan{}).Count(&total).Error; err != nil {
-		return 0, nil, fmt.Errorf("failed to count scans: %w", err)
-	}
-
-	// Handle pagination - page 0 defaults to 1
-	page := params.Page
-	if page == 0 {
-		page = 1
-	}
-	offset := (page - 1) * params.PerPage
-	query = query.Offset(int(offset)).Limit(int(params.PerPage))
-
-	// Preload scan results with scripts and hosts
-	if err := query.Preload("ScanResults", func(db *gorm.DB) *gorm.DB {
-		return db.Preload("Scripts")
-	}).Preload("Hosts").Find(&results).Error; err != nil {
-		return 0, nil, fmt.Errorf("failed to search scans: %w", err)
-	}
-
-	return uint64(total), results, nil
+    return Search[models.NmapScan](ctx, n.db, params,
+        Preload[models.NmapScan]{Association: "ScanResults", Fn: func(db *gorm.DB) *gorm.DB {
+            return db.Preload("Scripts")
+        }},
+        Preload[models.NmapScan]{Association: "Hosts", Fn: nil},
+    )
 }
 
 func (n *NmapRepositoryImpl) GetScan(ctx context.Context, scanID string) (*models.NmapScan, error) {

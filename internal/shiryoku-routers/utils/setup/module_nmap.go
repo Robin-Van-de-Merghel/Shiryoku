@@ -10,6 +10,5 @@ import (
 func SetupNmapRoutes(nmap_group *gin.RouterGroup, repos *shiryoku_db.Repositories) {
 	search_group := nmap_group.Group("/search")
 	search_group.POST("", nmap.SearchNmapScans(repos.Nmap))
-	search_group.POST("/ports", nmap.SearchNmapPorts(repos.Nmap))
 	nmap_group.POST("/batch", nmap.InsertNmapScans(repos.Nmap))
 }
