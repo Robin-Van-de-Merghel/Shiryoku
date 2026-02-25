@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	config_common "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/config/common"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
 	models_widgets "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
+	"gorm.io/gorm"
 )
 
 // SearchableRepository is a generic interface for any resource that supports search and pagination
@@ -45,8 +47,8 @@ type NmapRepository interface {
 
 // DashboardRepository defines operations specific to dashboard views
 type DashboardRepository interface {
-	// GetDashboardScans retrieves paginated scan-host combinations from materialized view
-	GetDashboardScans(ctx context.Context, params *models.SearchParams) (uint64, []models_widgets.WidgetDashboardScan, error)
+	// Search retrieves paginated scan-host combinations from materialized view
+	Search(ctx context.Context, params *models.SearchParams) (uint64, []models_widgets.WidgetDashboardScan, error)
 
 	// RefreshMaterializedView refreshes the dashboard materialized view
 	RefreshMaterializedView(ctx context.Context) error
@@ -59,4 +61,52 @@ type DashboardRepository interface {
 
 	// Check health
 	ReadyCheck() config_common.Checker
+}
+
+type Preload[T any] struct {
+    Association string
+    Fn          func(*gorm.DB) *gorm.DB
+}
+
+// Search is a generic function to query a simple table with SearchParams
+// It accepts preloads fields, as some results may be nested
+func Search[T any](
+    ctx context.Context, 
+    db *gorm.DB, 
+    params *models.SearchParams, 
+    preloads ...Preload[T],
+) (uint64, []T, error) {
+	var results []T
+
+	params.SetDefaults()
+
+	builder := NewSearchBuilder[T](db.WithContext(ctx))
+	query, err := builder.Build(params)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	var total int64
+	if err := query.Model(new(T)).Count(&total).Error; err != nil {
+		return 0, nil, fmt.Errorf("failed to count records: %w", err)
+	}
+
+	// Handle pagination - page 0 defaults to 1
+	page := params.Page
+	if page == 0 {
+		page = 1
+	}
+	offset := (page - 1) * params.PerPage
+	query = query.Offset(int(offset)).Limit(int(params.PerPage))
+
+	// Apply preloads if provided
+	for _, preload := range preloads {
+		query = query.Preload(preload.Association, preload.Fn)
+	}
+
+	if err := query.Find(&results).Error; err != nil {
+		return 0, nil, fmt.Errorf("failed to search records: %w", err)
+	}
+
+	return uint64(total), results, nil
 }

@@ -2,32 +2,11 @@ package dashboard
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models/widgets"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/postgres"
-	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/common"
 )
-
-// GetLatestWidgetScans fetches the latest scans with host and port info from dashboard table
-func GetLatestWidgetScans(
-	ctx context.Context,
-	dashboardRepo postgres.DashboardRepository,
-	input *models.SearchParams,
-) (*common.SearchResult[widgets.WidgetDashboardScan], error) {
-	input.SetDefaults()
-
-	total, results, err := dashboardRepo.GetDashboardScans(ctx, input)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch latest scans: %w", err)
-	}
-
-	return &common.SearchResult[widgets.WidgetDashboardScan]{
-		Total:   total,
-		Results: results,
-	}, nil
-}
 
 // BuildDashboardScans rebuilds the dashboard table from the last `days` of scans
 func BuildDashboardScans(
