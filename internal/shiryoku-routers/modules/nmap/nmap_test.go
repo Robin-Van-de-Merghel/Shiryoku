@@ -1,37 +1,31 @@
-package routers_modules_nmap 
+package routers_modules_nmap
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
-	opensearch_testing "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch/testing"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-core/models"
+	postgres_testing "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/postgres/testing"
 	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupRouter() *gin.Engine {
+func setupRouter(mockRepo *postgres_testing.MockNmapRepository) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.Use(utils.ErrorRecoveryMiddleware())
-
-	// Build the mock
-	transport := opensearch_testing.NewMockTransport()
-	osClient, _ := opensearch_testing.NewMockOpenSearchClient(transport)
-
-	// Connect to a virtual opensearch db
-	osdbClient := osdb.NewOpenSearchClient(osClient)
 
 	api_group := r.Group("/api")
 	{
 		modules_group := api_group.Group("/modules")
 		{
 			nmap_group := modules_group.Group("/nmap")
-			nmap_group.POST("/search", SearchNmapScans(*osdbClient))
+			nmap_group.POST("/search", SearchNmapScans(mockRepo))
 		}
 	}
 	return r
@@ -49,7 +43,12 @@ func makeRequest(router *gin.Engine, payload any) *httptest.ResponseRecorder {
 }
 
 func TestSearchNmapScansSuccess(t *testing.T) {
-	router := setupRouter()
+	mockRepo := &postgres_testing.MockNmapRepository{
+		SearchFn: func(ctx context.Context, params *models.SearchParams) (uint64, []models.NmapScan, error) {
+			return 0, []models.NmapScan{}, nil
+		},
+	}
+	router := setupRouter(mockRepo)
 
 	tests := []struct {
 		name           string

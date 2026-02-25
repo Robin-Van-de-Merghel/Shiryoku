@@ -1,18 +1,21 @@
 package config
 
 import (
-	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+	shiryoku_db "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db"
 	routers_utils_setup "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-routers/utils/setup"
+	"github.com/gin-gonic/gin"
 )
 
-func GetDefaultModules(client osdb.OpenSearchClient) []APIModule {
+// GetDefaultModules returns the default API modules with configured routes
+func GetDefaultModules(repos *shiryoku_db.Repositories) []APIModule {
 	return []APIModule{
 		{
-			Name:              "NMap Module",
-			Description:       "Use to parse nmap results and query them.",
-			Path:              "/nmap",
-			OSDB:              client,
-			SetupModuleRoutes: routers_utils_setup.SetupNmapRoutes,
+			Name:        "nmap",
+			Description: "Nmap scan results",
+			Path:        "/nmap",
+			SetupModuleRoutes: func(group *gin.RouterGroup) {
+				routers_utils_setup.SetupNmapRoutes(group, repos)
+			},
 		},
 	}
 }

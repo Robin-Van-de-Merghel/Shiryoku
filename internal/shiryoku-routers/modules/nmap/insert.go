@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"io"
 
-	osdb "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/opensearch"
+	"github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-db/postgres"
 	logicnmap "github.com/Robin-Van-de-Merghel/Shiryoku/internal/shiryoku-logic/modules/nmap"
 	"github.com/Ullaakut/nmap/v4"
 	"github.com/gin-gonic/gin"
 )
 
 // InsertNmapScans inserts multiple nmap scans
-func InsertNmapScans(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
+func InsertNmapScans(nmapRepo postgres.NmapRepository) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var nmapResults *nmap.Run
 
@@ -31,7 +31,7 @@ func InsertNmapScans(nmapDB osdb.OpenSearchClient) func(c *gin.Context) {
 		}
 
 		// Continue as before, now you have `nmapResults` unmarshalled from XML
-		ids, err := logicnmap.SaveNmapScans(c.Request.Context(), nmapResults, nmapDB)
+		ids, err := logicnmap.SaveNmapScans(c.Request.Context(), nmapResults, nmapRepo)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return

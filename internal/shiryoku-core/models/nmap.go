@@ -1,12 +1,13 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/lib/pq"
+)
 
 // Adapted from: https://github.com/Ullaakut/nmap/blob/master/xml.go
-// Initially, I stored it in a nested document
-// -> Not practical for querying
-// -> Not practical for storing
-// TODO: Explode multiple ports into multiple documents
 
 // PortStatus represents the state of a port.
 type PortStatus string
@@ -49,58 +50,100 @@ func (p Protocol) IsValid() bool {
 	}
 }
 
-// NmapScriptResult represents a single NSE script result for a port.
+// NmapScriptResult represents a single NSE script result for a scan result.
 type NmapScriptResult struct {
-	ID string `json:"id"`
+	NmapScriptResultID uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"nmap_script_result_id"`
 	// TODO: Parsing?
-	Output string `json:"output"`
+	ScanResultID uuid.UUID `gorm:"type:uuid;index" json:"-"`
+	ScriptID     string    `gorm:"type:varchar(255)" json:"id"`
+	ScriptOutput string    `gorm:"type:text" json:"output"`
+	CreatedAt    time.Time `gorm:"autoCreateTime" json:"-"`
 }
 
-// NmapHostDocument is dedicated to storing host info
-type NmapHostDocument struct {
-	// Host metadata
-	Comment string `json:"comment,omitempty"` // See nmap doc
+func (NmapScriptResult) TableName() string {
+	return "nse_scripts"
+}
 
-	// Host information
-	HostID     string   `json:"host_id,omitempty"`
-	Host       string   `json:"host"` // (takes first address)
-	Addresses  []string `json:"addresses,omitempty"`
-	Hostnames  []string `json:"hostnames,omitempty"`   // DNS names
-	HostStatus string   `json:"host_status,omitempty"` // up / down
+// Service represents a discovered service
+// Unicity : (ServiceName + Product + Version + ServiceExtraInfo + Protocol + ServiceTunnel)
+// Usable by other scripts than nmap (nuclei, etc.)
+type Service struct {
+	ServiceID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"service_id"`
+	ServiceName      string    `gorm:"type:varchar(255)" json:"service_name,omitempty"`
+	ServiceProduct   string    `gorm:"type:varchar(255)" json:"service_product,omitempty"`
+	ServiceVersion   string    `gorm:"type:varchar(255)" json:"service_version,omitempty"`
+	ServiceExtraInfo string    `gorm:"type:text" json:"service_extra_info,omitempty"`
+	// tcp / udp / sctp
+	Protocol      string    `gorm:"type:varchar(10)" json:"protocol,omitempty"`
+	ServiceTunnel string    `gorm:"type:varchar(50)" json:"service_tunnel,omitempty"`
+	CreatedAt     time.Time `gorm:"autoCreateTime" json:"-"`
+}
 
-	// OS detection
-	OSName     string `json:"os_name,omitempty"`
+func (Service) TableName() string {
+	return "services"
+}
+
+type NmapScan struct {
+	ScanID      uuid.UUID `gorm:"type:uuid;primaryKey" json:"scan_id"`
+	// epoch timestamp
+	ScanStart   time.Time `gorm:"index:idx_scan_start" json:"scan_start"`
+	// command line args
+	ScanArgs    string    `gorm:"type:text" json:"scan_args,omitempty"`
+	// e.g. "7.94"
+	NmapVersion string    `gorm:"type:varchar(50)" json:"nmap_version,omitempty"`
+	CreatedAt   time.Time `gorm:"autoCreateTime" json:"-"`
+
+	// Relations
+	ScanResults []ScanResult `gorm:"foreignKey:ScanID" json:"scan_results,omitempty"`
+	Hosts       []NmapHost   `gorm:"many2many:scan_hosts;" json:"hosts,omitempty"`
+}
+
+func (NmapScan) TableName() string {
+	return "scans"
+}
+
+// NmapHost is dedicated to storing host info
+// A host can appear in multiple scans
+type NmapHost struct {
+	HostID     uuid.UUID      `gorm:"type:uuid;primaryKey" json:"host_id"`
+	// takes first address
+	Host       string         `gorm:"index:idx_host;type:varchar(255)" json:"host"`
+	Addresses  pq.StringArray `gorm:"type:text[]" json:"addresses,omitempty"`
+	// DNS names
+	Hostnames  pq.StringArray `gorm:"type:text[]" json:"hostnames,omitempty"`
+	// up / down
+	HostStatus string `gorm:"type:varchar(20)" json:"host_status,omitempty"`
+	OSName     string `gorm:"type:varchar(255)" json:"os_name,omitempty"`
 	OSAccuracy int    `json:"os_accuracy,omitempty"`
+	// See nmap doc
+	Comment   string    `gorm:"type:text" json:"comment,omitempty"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"-"`
+
+	ScanResults []ScanResult `gorm:"foreignKey:HostID" json:"scan_results,omitempty"`
 }
 
-// NmapScanDocument stores only scan info (uuid,)
-type NmapScanDocument struct {
-	ScanID      string    `json:"scan_id,omitempty"`
-	HostIDs     []string  `json:"host_id,omitempty"`
-	ScanStart   time.Time `json:"scan_start"`             // epoch timestamp
-	ScanArgs    string    `json:"scan_args,omitempty"`    // command line args
-	NmapVersion string    `json:"nmap_version,omitempty"` // e.g. "7.94"
+func (NmapHost) TableName() string {
+	return "hosts"
 }
 
-// NmapPortDocument aims at storing port results, without host and scan info (for storage sake)
-type NmapPortDocument struct {
-	// ScanID and HostID: uuid
-	ScanID string `json:"scan_id,omitempty"`
-	HostID string `json:"host_id,omitempty"`
-
+// ScanResult represents a discovery of a service in a scan on a specific host and port
+// Composite unique key: (ScanID, HostID, ServiceID, Port)
+// One ScanResult = one port + one scan + one host + one service
+// Represents: In this scan, this host had this service on this port
+type ScanResult struct {
+	ScanResultID uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"scan_result_id"`
+	ScanID       uuid.UUID `gorm:"type:uuid;index:idx_scan_host_service;index:idx_scan_host" json:"scan_id"`
+	HostID       uuid.UUID `gorm:"type:uuid;index:idx_scan_host_service;index:idx_scan_host" json:"host_id"`
+	ServiceID    uuid.UUID `gorm:"type:uuid;index:idx_scan_host_service" json:"service_id"`
 	// Port information
-	Port      uint16     `json:"port"`
-	Protocol  Protocol   `json:"protocol,omitempty"`   // tcp / udp / sctp
-	PortState PortStatus `json:"port_state,omitempty"` // open / closed / filtered / ...
+	Port      uint16    `gorm:"index:idx_scan_host_service" json:"port"`
+	PortState string    `gorm:"type:varchar(20)" json:"port_state,omitempty"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"-"`
 
-	// Service detection
-	ServiceName      string `json:"service_name,omitempty"`       // e.g. http, ssh
-	ServiceProduct   string `json:"service_product,omitempty"`    // product name
-	ServiceVersion   string `json:"service_version,omitempty"`    // version
-	ServiceExtraInfo string `json:"service_extra_info,omitempty"` // extra info string
-	ServiceTunnel    string `json:"service_tunnel,omitempty"`     // e.g. ssl
-	// TODO: See if we need more
+	// Relations - Service loaded manually, no GORM FK constraint
+	Scripts  []NmapScriptResult `gorm:"foreignKey:ScanResultID" json:"scripts,omitempty"`
+}
 
-	// NSE scripts
-	Scripts []NmapScriptResult `json:"scripts,omitempty"`
+func (ScanResult) TableName() string {
+	return "scan_results"
 }
