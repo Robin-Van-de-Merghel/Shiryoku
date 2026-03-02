@@ -18,7 +18,7 @@ services:
   shiryoku-api:
     build:
       context: .
-      dockerfile: ./cmd/shiryoku-api/Dockerfile
+      dockerfile: ./cmd/api/Dockerfile
     container_name: shiryoku-api
     restart: unless-stopped
     depends_on:
@@ -43,7 +43,7 @@ services:
   shiryoku-worker:
     build:
       context: .
-      dockerfile: ./cmd/shiryoku-worker/Dockerfile
+      dockerfile: ./cmd/worker/Dockerfile
     container_name: shiryoku-worker
     restart: unless-stopped
     depends_on:

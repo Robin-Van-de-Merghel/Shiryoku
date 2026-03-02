@@ -33,10 +33,10 @@ What I want to achieve:
 
 Some documentations will be written as time goes...:
 
-- [`shiryoku-routers`](./internal/shiryoku-routers/README.md): handles requests
-- [`shiryoku-logic`](./internal/shiryoku-logic/README.md): contains the business logic
-- [`shiryoku-db`](./internal/shiryoku-db/README.md): handle db interactions
-- [`shiryoku-core`](./internal/shiryoku-core/README.md): contains configurations as well as models
+- [`shiryoku-routers`](./internal/routers/README.md): handles requests
+- [`shiryoku-logic`](./internal/logic/README.md): contains the business logic
+- [`shiryoku-db`](./internal/db/README.md): handle db interactions
+- [`shiryoku-core`](./internal/core/README.md): contains configurations as well as models
 
 > [!NOTE]
-> This design is (vastly) adapted from [diracx](https://github.com/diracgrid/diracx), a project I worked for.
+> This design is (vastly) adapted from [diracx](https://github.com/diracgrid/diracx), a project I worked in.
