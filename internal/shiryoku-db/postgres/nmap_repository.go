@@ -19,12 +19,12 @@ func NewNmapRepository(db *gorm.DB) NmapRepository {
 }
 
 func (n *NmapRepositoryImpl) Search(ctx context.Context, params *models.SearchParams) (uint64, []models.NmapScan, error) {
-    return Search[models.NmapScan](ctx, n.db, params,
-        Preload[models.NmapScan]{Association: "ScanResults", Fn: func(db *gorm.DB) *gorm.DB {
-            return db.Preload("Scripts")
-        }},
-        Preload[models.NmapScan]{Association: "Hosts", Fn: nil},
-    )
+	return Search[models.NmapScan](ctx, n.db, params,
+		Preload[models.NmapScan]{Association: "ScanResults", Fn: func(db *gorm.DB) *gorm.DB {
+			return db.Preload("Scripts")
+		}},
+		Preload[models.NmapScan]{Association: "Hosts", Fn: nil},
+	)
 }
 
 func (n *NmapRepositoryImpl) GetScan(ctx context.Context, scanID string) (*models.NmapScan, error) {

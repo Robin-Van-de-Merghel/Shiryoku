@@ -39,8 +39,7 @@ func (d *DashboardRepositoryImpl) ReadyCheck() common.Checker {
 
 // GetDashboardScans retrieves paginated scan-host combinations from materialized view
 func (d *DashboardRepositoryImpl) Search(ctx context.Context, params *models.SearchParams) (uint64, []widgets.WidgetDashboardScan, error) {
-		return Search[widgets.WidgetDashboardScan](ctx, d.db, params, 
-	)
+	return Search[widgets.WidgetDashboardScan](ctx, d.db, params)
 }
 
 func (d *DashboardRepositoryImpl) RefreshMaterializedView(ctx context.Context) error {

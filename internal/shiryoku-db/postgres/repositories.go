@@ -64,17 +64,17 @@ type DashboardRepository interface {
 }
 
 type Preload[T any] struct {
-    Association string
-    Fn          func(*gorm.DB) *gorm.DB
+	Association string
+	Fn          func(*gorm.DB) *gorm.DB
 }
 
 // Search is a generic function to query a simple table with SearchParams
 // It accepts preloads fields, as some results may be nested
 func Search[T any](
-    ctx context.Context, 
-    db *gorm.DB, 
-    params *models.SearchParams, 
-    preloads ...Preload[T],
+	ctx context.Context,
+	db *gorm.DB,
+	params *models.SearchParams,
+	preloads ...Preload[T],
 ) (uint64, []T, error) {
 	var results []T
 
